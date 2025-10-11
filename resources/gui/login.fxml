@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gui.LoginController"
+            prefWidth="600" prefHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom right, #1e1e1e, #2d2d2d);">
+
+    <children>
+        <!-- Başlık -->
+        <Label text="Yılmaz &amp; Ünal Oto Lastik"
+               layoutX="150" layoutY="60"
+               style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #e0e0e0;"/>
+
+        <!-- Giriş Kartı -->
+        <VBox alignment="CENTER" spacing="15"
+              layoutX="150" layoutY="130"
+              prefWidth="300" prefHeight="200"
+              style="-fx-background-color: rgba(255, 255, 255, 0.05);
+                     -fx-background-radius: 12;
+                     -fx-padding: 20;">
+
+            <Label text="Kullanıcı Girişi"
+                   style="-fx-font-size: 18px; -fx-text-fill: #ffffff; -fx-font-weight: bold;"/>
+
+            <TextField fx:id="usernameField" promptText="Kullanıcı Adı"
+                       style="-fx-background-radius: 6;
+                              -fx-background-color: #3a3a3a;
+                              -fx-text-fill: white;
+                              -fx-prompt-text-fill: #999999;
+                              -fx-border-color: transparent;
+                              -fx-pref-width: 250;"/>
+
+            <PasswordField fx:id="passwordField" promptText="Şifre"
+                           style="-fx-background-radius: 6;
+                                  -fx-background-color: #3a3a3a;
+                                  -fx-text-fill: white;
+                                  -fx-prompt-text-fill: #999999;
+                                  -fx-border-color: transparent;
+                                  -fx-pref-width: 250;"/>
+
+            <Button text="Giriş Yap"
+                    onAction="#handleLogin"
+                    style="-fx-background-color: #4caf50;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 6;
+                           -fx-pref-width: 150;
+                           -fx-cursor: hand;"/>
+
+            <Label fx:id="errorLabel"
+                   textFill="red"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Alt bilgi -->
+        <Label text="Yılmaz &amp; Ünal Oto Lastik"
+               layoutX="200" layoutY="360"
+               style="-fx-text-fill: #888888; -fx-font-size: 12px;"/>
+    </children>
+</AnchorPane>
