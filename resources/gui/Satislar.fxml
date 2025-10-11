@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.SatislarController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #121212, #1f1f1f);">
+
+    <children>
+        <VBox spacing="15" alignment="TOP_CENTER"
+              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="20"
+              AnchorPane.rightAnchor="20" AnchorPane.bottomAnchor="20"
+              style="-fx-background-color: rgba(255,255,255,0.05);
+                     -fx-background-radius: 16;
+                     -fx-padding: 24;">
+
+            <!-- Başlık -->
+            <Label text="Satışlar"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;"/>
+
+            <!-- Giriş alanları -->
+            <GridPane hgap="20" vgap="15" alignment="CENTER">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints halignment="LEFT"/>
+                </columnConstraints>
+
+                <children>
+                    <Label text="Marka:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cmbMarka" prefWidth="180" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Tip:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cmbTip" prefWidth="180" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Ebat:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cmbEbat" prefWidth="180" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="Adet:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtAdet" promptText="Satılacak miktar" prefWidth="180"
+                               style="-fx-background-color: #2b2b2b; -fx-text-fill: white;"
+                               GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Alış ₺:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtAlis" editable="false" prefWidth="180"
+                               style="-fx-background-color: #2b2b2b; -fx-text-fill: white;"
+                               GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                    <Label text="Satış ₺:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtSatis" editable="false" prefWidth="180"
+                               style="-fx-background-color: #2b2b2b; -fx-text-fill: white;"
+                               GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Stok:" style="-fx-text-fill: #EDEDED;" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtStok" editable="false" prefWidth="180"
+                               style="-fx-background-color: #2b2b2b; -fx-text-fill: white;"
+                               GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                </children>
+            </GridPane>
+
+            <!-- Satış Butonu -->
+            <Button text="Satış Yap" fx:id="btnSatisYap" onAction="#satisYap"
+                    style="-fx-background-color:#0078D7; -fx-text-fill:white;
+                           -fx-font-weight:bold; -fx-font-size:14px;
+                           -fx-background-radius:10; -fx-padding:8 20;"
+                    prefWidth="180"/>
+
+            <!-- Satışlar Tablosu -->
+            <TableView fx:id="tblSatislar" prefHeight="330" prefWidth="820"
+                       style="-fx-background-color: #2c2c2c; -fx-text-fill: white; -fx-border-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colTarih" text="Tarih" prefWidth="120"/>
+                    <TableColumn fx:id="colMarka" text="Marka" prefWidth="120"/>
+                    <TableColumn fx:id="colTip" text="Tip" prefWidth="100"/>
+                    <TableColumn fx:id="colEbat" text="Ebat" prefWidth="150"/>
+                    <TableColumn fx:id="colAdet" text="Adet" prefWidth="80"/>
+                    <TableColumn fx:id="colAlis" text="Alış ₺" prefWidth="100"/>
+                    <TableColumn fx:id="colSatis" text="Satış ₺" prefWidth="100"/>
+                    <TableColumn fx:id="colKalan" text="Kalan Stok" prefWidth="100"/>
+                </columns>
+            </TableView>
+
+            <!-- Geri butonu -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button text="Geri" onAction="#geriDon"
+                        style="-fx-background-color:#4A4A4A; -fx-text-fill:#EDEDED;
+                               -fx-background-radius:12; -fx-padding:10 18; -fx-cursor:hand;"/>
+            </HBox>
+
+        </VBox>
+    </children>
+</AnchorPane>

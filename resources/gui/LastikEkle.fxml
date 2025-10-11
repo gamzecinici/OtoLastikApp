@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.LastikEkleController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1a1a1a);">
+    <children>
+        <StackPane AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+            <children>
+                <VBox spacing="22" alignment="TOP_LEFT"
+                      prefWidth="600"
+                      style="-fx-background-color: rgba(255,255,255,0.06);
+                             -fx-background-radius: 18;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 24, 0.25, 0, 6);">
+                    <padding>
+                        <Insets top="36" right="36" bottom="32" left="36"/>
+                    </padding>
+
+                    <!-- Başlık -->
+                    <Label text="Lastik Ekle"
+                           style="-fx-font-size: 28px; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;
+                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 5, 0.5, 1, 1);"/>
+
+                    <GridPane hgap="16" vgap="18">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="190" halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <!-- Marka -->
+                        <Label text="Marka:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtMarka" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                                   promptText="Örn: Michelin"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+
+                        <!-- Tip -->
+                        <Label text="Tip:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <ComboBox fx:id="comboTip" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                                  promptText="Seçiniz"
+                                  style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                         -fx-background-radius:12; -fx-font-size:15px;
+                                         -fx-padding:6 10; -fx-mark-color:#E0E0E0;"/>
+
+                        <!-- Ebat -->
+                        <Label text="Ebat:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtEbat" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                                   promptText="Örn: 205/55 R16"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+
+                        <!-- Alış -->
+                        <Label text="Alış Fiyatı (₺):" GridPane.rowIndex="3" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtAlis" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                                   promptText="Örn: 1200"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+
+                        <!-- Satış -->
+                        <Label text="Satış Fiyatı (₺):" GridPane.rowIndex="4" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtSatis" GridPane.rowIndex="4" GridPane.columnIndex="1"
+                                   promptText="Örn: 1500"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+
+                        <!-- Tarih -->
+                        <Label text="Tarih (gg.aa.yyyy):" GridPane.rowIndex="5" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtTarih" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                                   promptText="Örn: 11.10.2025"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+
+                        <!-- Adet -->
+                        <Label text="Adet:" GridPane.rowIndex="6" GridPane.columnIndex="0"
+                               style="-fx-text-fill:#E0E0E0; -fx-font-size:15px;"/>
+                        <TextField fx:id="txtAdet" GridPane.rowIndex="6" GridPane.columnIndex="1"
+                                   promptText="Örn: 5"
+                                   style="-fx-background-color:#303030; -fx-text-fill:#F2F2F2;
+                                          -fx-background-radius:12; -fx-prompt-text-fill:#A6A6A6;
+                                          -fx-font-size:15px; -fx-padding:10 12 10 12;"/>
+                    </GridPane>
+
+                    <!-- Butonlar -->
+                    <HBox spacing="14" alignment="CENTER_LEFT">
+                        <Button fx:id="btnKaydet" text="Kaydet" onAction="#handleKaydet"
+                                defaultButton="true"
+                                style="-fx-background-color:#00C853; -fx-text-fill:white;
+                                       -fx-font-weight:bold; -fx-background-radius:12;
+                                       -fx-font-size:15px; -fx-padding:10 22; -fx-cursor:hand;"/>
+                        <Button text="Geri" onAction="#handleGeri" cancelButton="true"
+                                style="-fx-background-color:#4A4A4A; -fx-text-fill:#EDEDED;
+                                       -fx-font-size:15px; -fx-background-radius:12;
+                                       -fx-padding:10 22; -fx-cursor:hand;"/>
+                    </HBox>
+                </VBox>
+            </children>
+        </StackPane>
+    </children>
+</AnchorPane>

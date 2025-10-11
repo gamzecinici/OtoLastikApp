@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.LastiklerController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #121212, #1f1f1f);">
+
+    <children>
+        <VBox spacing="15" alignment="TOP_CENTER"
+              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="20"
+              AnchorPane.rightAnchor="20" AnchorPane.bottomAnchor="20"
+              style="-fx-background-color: rgba(255,255,255,0.05);
+                     -fx-background-radius: 16;
+                     -fx-padding: 24;">
+
+            <Label text="Stoktaki Lastikler"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;"/>
+
+            <TableView fx:id="tableLastikler" prefHeight="400" prefWidth="820"
+                       style="-fx-background-color: #2c2c2c; -fx-text-fill: white; -fx-border-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colMarka" text="Marka" prefWidth="120"/>
+                    <TableColumn fx:id="colTip" text="Tip" prefWidth="120"/>
+                    <TableColumn fx:id="colEbat" text="Ebat" prefWidth="140"/>
+                    <TableColumn fx:id="colAlis" text="Alış ₺" prefWidth="120"/>
+                    <TableColumn fx:id="colSatis" text="Satış ₺" prefWidth="120"/>
+                    <TableColumn fx:id="colAdet" text="Adet" prefWidth="80"/>
+                    <TableColumn fx:id="colTarih" text="Tarih" prefWidth="120"/>
+                </columns>
+            </TableView>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button text="Geri" onAction="#handleGeri"
+                        style="-fx-background-color:#4A4A4A; -fx-text-fill:#EDEDED;
+                               -fx-background-radius:12; -fx-padding:10 18; -fx-cursor:hand;"/>
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>
