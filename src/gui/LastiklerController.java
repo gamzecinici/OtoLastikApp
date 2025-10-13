@@ -7,19 +7,17 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Lastik;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Stoktaki lastikleri gösteren kontrol sınıfı.
- * Veriler urunler tablosu ve ilişkili markalar/tipler/ebatlar tablolarından çekilir.
+ * Stoktaki lastikleri gösterir ve stok artırma işlemlerini yönetir.
  */
 public class LastiklerController {
 
@@ -27,6 +25,8 @@ public class LastiklerController {
     @FXML private TableColumn<Lastik, String> colMarka;
     @FXML private TableColumn<Lastik, String> colTip;
     @FXML private TableColumn<Lastik, String> colEbat;
+    @FXML private TableColumn<Lastik, String> colHiz;
+    @FXML private TableColumn<Lastik, String> colYuk;
     @FXML private TableColumn<Lastik, Double> colAlis;
     @FXML private TableColumn<Lastik, Double> colSatis;
     @FXML private TableColumn<Lastik, Integer> colAdet;
@@ -36,10 +36,12 @@ public class LastiklerController {
 
     @FXML
     public void initialize() {
-        // Tablo sütunlarını model sınıfındaki property’lerle eşleştir
+        // Tablo sütunlarını model property’lerine bağla
         colMarka.setCellValueFactory(data -> data.getValue().markaProperty());
         colTip.setCellValueFactory(data -> data.getValue().tipProperty());
         colEbat.setCellValueFactory(data -> data.getValue().ebatProperty());
+        colHiz.setCellValueFactory(data -> data.getValue().hizProperty());
+        colYuk.setCellValueFactory(data -> data.getValue().yukProperty());
         colAlis.setCellValueFactory(data -> data.getValue().alisFiyatiProperty().asObject());
         colSatis.setCellValueFactory(data -> data.getValue().satisFiyatiProperty().asObject());
         colAdet.setCellValueFactory(data -> data.getValue().adetProperty().asObject());
@@ -51,7 +53,6 @@ public class LastiklerController {
 
     /**
      * Veritabanındaki aktif lastik kayıtlarını tabloya yükler.
-     * Marka, tip ve ebat bilgileri ilişkili tablolardan JOIN ile alınır.
      */
     private void lastikleriYukle() {
         lastikListesi.clear();
@@ -62,6 +63,8 @@ public class LastiklerController {
                     m.markaAdi AS marka,
                     t.tip AS tip,
                     CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
+                    h.hizEndeks AS hiz,
+                    y.yukEndeks AS yuk,
                     u.alisFiyati,
                     u.satisFiyati,
                     u.adet,
@@ -70,6 +73,8 @@ public class LastiklerController {
                 JOIN markalar m ON u.markaId = m.id
                 JOIN tipler t ON u.tipId = t.id
                 JOIN ebatlar e ON u.ebatId = e.id
+                JOIN hizEndeksleri h ON u.hizEndeksId = h.id
+                JOIN yukEndeksleri y ON u.yukEndeksId = y.id
                 WHERE u.aktif = 1
                 ORDER BY u.eklenmeTarihi DESC;
                 """;
@@ -80,9 +85,12 @@ public class LastiklerController {
 
             while (rs.next()) {
                 lastikListesi.add(new Lastik(
+                        rs.getInt("id"),
                         rs.getString("marka"),
                         rs.getString("tip"),
                         rs.getString("ebat"),
+                        rs.getString("hiz"),
+                        rs.getString("yuk"),
                         rs.getDouble("alisFiyati"),
                         rs.getDouble("satisFiyati"),
                         rs.getInt("adet"),
@@ -100,6 +108,70 @@ public class LastiklerController {
             alert.setContentText(e.getMessage());
             alert.showAndWait();
         }
+    }
+
+    /**
+     * “Stok Artır” butonu tıklandığında seçilen ürünün stok adedini günceller.
+     */
+    @FXML
+    private void handleStokArtir() {
+        Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
+
+        if (secilen == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Uyarı");
+            alert.setHeaderText("Stok Artırma İşlemi");
+            alert.setContentText("Lütfen önce bir ürün seçin.");
+            alert.showAndWait();
+            return;
+        }
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Stok Artır");
+        dialog.setHeaderText("Seçilen ürün: " + secilen.markaProperty().get() + " " + secilen.tipProperty().get());
+        dialog.setContentText("Eklenecek adet miktarını girin:");
+
+        dialog.showAndWait().ifPresent(giris -> {
+            try {
+                int eklenecek = Integer.parseInt(giris);
+                if (eklenecek <= 0) {
+                    throw new NumberFormatException();
+                }
+
+                String sql = "UPDATE urunler SET adet = adet + ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+
+                try (Connection conn = DatabaseConnection.baglan();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                    ps.setInt(1, eklenecek);
+                    ps.setInt(2, secilen.idProperty().get());
+                    ps.executeUpdate();
+                }
+
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Başarılı");
+                info.setHeaderText("Stok Güncellendi");
+                info.setContentText("Stok " + eklenecek + " adet artırıldı!");
+                info.showAndWait();
+
+                // Tabloyu yenile
+                lastikleriYukle();
+
+            } catch (NumberFormatException e) {
+                Alert err = new Alert(Alert.AlertType.ERROR);
+                err.setTitle("Hata");
+                err.setHeaderText("Geçersiz Giriş");
+                err.setContentText("Lütfen geçerli bir sayı girin!");
+                err.showAndWait();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Alert err = new Alert(Alert.AlertType.ERROR);
+                err.setTitle("Hata");
+                err.setHeaderText("Stok artırılırken hata oluştu!");
+                err.setContentText(ex.getMessage());
+                err.showAndWait();
+            }
+        });
     }
 
     /**
