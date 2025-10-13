@@ -8,21 +8,38 @@
 <AnchorPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="gui.PanelController"
-            prefWidth="800" prefHeight="500"
-            style="-fx-background-color: linear-gradient(to bottom right, #1e1e1e, #2d2d2d);">
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #121212, #1f1f1f);">
 
     <children>
 
-        <!-- Üst kısım: Logo + Tarih/Saat -->
-        <HBox spacing="20" alignment="CENTER_LEFT"
-              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="20">
-            <ImageView fx:id="logoView" fitHeight="80" fitWidth="80" />
+        <!-- Üst kısım: Logo + Tarih/Saat + Veritabanı Özetleri -->
+        <HBox spacing="40" alignment="CENTER_LEFT"
+              AnchorPane.topAnchor="25" AnchorPane.leftAnchor="25">
+            <ImageView fx:id="logoView" fitHeight="90" fitWidth="90" />
+
             <VBox spacing="5">
                 <Label fx:id="dateLabel"
+                       text="01.01.2025"
                        style="-fx-font-size: 18px; -fx-text-fill: #e0e0e0;" />
                 <Label fx:id="timeLabel"
+                       text="12:00:00"
                        style="-fx-font-size: 18px; -fx-text-fill: #e0e0e0;" />
             </VBox>
+
+            <!-- Araya biraz boşluk -->
+            <Region prefWidth="60"/>
+
+            <!-- Veritabanı özet bilgileri -->
+            <HBox spacing="20">
+                <Label fx:id="toplamUrunLabel"
+                       text="Toplam Ürün: 0"
+                       style="-fx-text-fill: #90caf9; -fx-font-size: 16px; -fx-font-weight: bold;" />
+
+                <Label fx:id="toplamSatisLabel"
+                       text="Toplam Satış: 0"
+                       style="-fx-text-fill: #ffcc80; -fx-font-size: 16px; -fx-font-weight: bold;" />
+            </HBox>
         </HBox>
 
         <!-- Orta kısım: Buton kartı (merkezde) -->
@@ -30,41 +47,49 @@
                    AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
             <children>
                 <VBox alignment="CENTER" spacing="20"
-                      prefWidth="240" prefHeight="220"
-                      style="-fx-background-color: rgba(255,255,255,0.06);
-                             -fx-background-radius: 14;
-                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 4);">
+                      prefWidth="260" prefHeight="240"
+                      style="-fx-background-color: rgba(255,255,255,0.05);
+                             -fx-background-radius: 16;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 18, 0.2, 0, 4);">
                     <padding>
-                        <Insets top="24" right="24" bottom="24" left="24"/>
+                        <Insets top="30" right="30" bottom="30" left="30"/>
                     </padding>
 
-                    <Button fx:id="btnLastikler" text="Lastikler"
+                    <Button fx:id="btnLastikler" text="Ürunler"
                             onAction="#handleLastikler"
                             style="-fx-background-color: #4caf50;
                                    -fx-text-fill: white; -fx-font-weight: bold;
-                                   -fx-background-radius: 8; -fx-pref-width: 180;
-                                   -fx-cursor: hand;"/>
+                                   -fx-background-radius: 10; -fx-pref-width: 200;
+                                   -fx-pref-height: 40; -fx-cursor: hand;"/>
 
-                    <Button fx:id="btnLastikEkle" text="Lastik Ekle"
+                    <Button fx:id="btnLastikEkle" text="Yeni Lastik Ekle"
                             onAction="#handleLastikEkle"
                             style="-fx-background-color: #2196f3;
                                    -fx-text-fill: white; -fx-font-weight: bold;
-                                   -fx-background-radius: 8; -fx-pref-width: 180;
-                                   -fx-cursor: hand;"/>
+                                   -fx-background-radius: 10; -fx-pref-width: 200;
+                                   -fx-pref-height: 40; -fx-cursor: hand;"/>
 
-                    <Button fx:id="btnSatislar" text="Satışlar"
+                    <Button fx:id="btnSatislar" text="Satış Yap"
                             onAction="#handleSatislar"
                             style="-fx-background-color: #ff9800;
                                    -fx-text-fill: white; -fx-font-weight: bold;
-                                   -fx-background-radius: 8; -fx-pref-width: 180;
-                                   -fx-cursor: hand;"/>
+                                   -fx-background-radius: 10; -fx-pref-width: 200;
+                                   -fx-pref-height: 40; -fx-cursor: hand;"/>
+
+                    <Button fx:id="btnSatisListesi" text="Satışlar"
+                            onAction="#handleSatislar"
+                            style="-fx-background-color: #ff9800;
+                                   -fx-text-fill: white; -fx-font-weight: bold;
+                                   -fx-background-radius: 10; -fx-pref-width: 200;
+                                   -fx-pref-height: 40; -fx-cursor: hand;"/>
+
                 </VBox>
             </children>
         </StackPane>
 
         <!-- Alt bilgi -->
         <Label text="Yılmaz &amp; Ünal Oto Lastik"
-               AnchorPane.bottomAnchor="12" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+               AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
                style="-fx-text-fill: #888888; -fx-font-size: 12px;"
                alignment="CENTER"/>
     </children>

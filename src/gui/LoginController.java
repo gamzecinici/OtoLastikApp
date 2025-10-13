@@ -33,7 +33,7 @@ public class LoginController {
 
         boolean ok = false;
 
-        String sql = "SELECT COUNT(*) FROM dbo.Kullanicilar WHERE kullanici_adi = ? AND sifre = ?";
+        String sql = "SELECT COUNT(*) FROM dbo.kullanicilar WHERE kullaniciAdi = ? AND sifre = ?";
 
         try (Connection conn = DatabaseConnection.baglan();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

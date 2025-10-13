@@ -17,6 +17,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+/**
+ * Stoktaki lastikleri gösteren kontrol sınıfı.
+ * Veriler urunler tablosu ve ilişkili markalar/tipler/ebatlar tablolarından çekilir.
+ */
 public class LastiklerController {
 
     @FXML private TableView<Lastik> tableLastikler;
@@ -46,11 +50,29 @@ public class LastiklerController {
     }
 
     /**
-     * Veritabanındaki tüm lastik kayıtlarını tabloya yükler.
+     * Veritabanındaki aktif lastik kayıtlarını tabloya yükler.
+     * Marka, tip ve ebat bilgileri ilişkili tablolardan JOIN ile alınır.
      */
     private void lastikleriYukle() {
         lastikListesi.clear();
-        String sql = "SELECT marka, tip, ebat, alis_fiyati, satis_fiyati, adet, tarih FROM Lastikler";
+
+        String sql = """
+                SELECT 
+                    u.id,
+                    m.markaAdi AS marka,
+                    t.tip AS tip,
+                    CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
+                    u.alisFiyati,
+                    u.satisFiyati,
+                    u.adet,
+                    FORMAT(u.eklenmeTarihi, 'dd.MM.yyyy') AS tarih
+                FROM urunler u
+                JOIN markalar m ON u.markaId = m.id
+                JOIN tipler t ON u.tipId = t.id
+                JOIN ebatlar e ON u.ebatId = e.id
+                WHERE u.aktif = 1
+                ORDER BY u.eklenmeTarihi DESC;
+                """;
 
         try (Connection conn = DatabaseConnection.baglan();
              Statement st = conn.createStatement();
@@ -61,8 +83,8 @@ public class LastiklerController {
                         rs.getString("marka"),
                         rs.getString("tip"),
                         rs.getString("ebat"),
-                        rs.getDouble("alis_fiyati"),
-                        rs.getDouble("satis_fiyati"),
+                        rs.getDouble("alisFiyati"),
+                        rs.getDouble("satisFiyati"),
                         rs.getInt("adet"),
                         rs.getString("tarih")
                 ));
@@ -86,9 +108,11 @@ public class LastiklerController {
     @FXML
     private void handleGeri() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/gui/panel.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/gui/Panel.fxml"));
             Stage stage = (Stage) tableLastikler.getScene().getWindow();
             stage.setScene(new Scene(root));
+            stage.setTitle("Yılmaz & Ünal Oto Lastik - Ana Panel");
+            stage.centerOnScreen();
         } catch (Exception e) {
             e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
