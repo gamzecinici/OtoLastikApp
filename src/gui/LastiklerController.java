@@ -194,4 +194,116 @@ public class LastiklerController {
             alert.showAndWait();
         }
     }
+
+    @FXML
+    private void handleIadeEt() {
+        Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
+
+        if (secilen == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Uyarı");
+            alert.setHeaderText("İade İşlemi");
+            alert.setContentText("Lütfen önce bir ürün seçin.");
+            alert.showAndWait();
+            return;
+        }
+
+        int mevcutAdet = secilen.adetProperty().get();
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("İade Et");
+        dialog.setHeaderText("Seçilen ürün: " + secilen.markaProperty().get() + " " + secilen.tipProperty().get());
+        dialog.setContentText("İade edilecek adet miktarını girin:");
+
+        dialog.showAndWait().ifPresent(giris -> {
+            try {
+                int iadeMiktar = Integer.parseInt(giris);
+                if (iadeMiktar <= 0) {
+                    throw new NumberFormatException();
+                }
+
+                if (iadeMiktar > mevcutAdet) {
+                    Alert warn = new Alert(Alert.AlertType.WARNING);
+                    warn.setTitle("Uyarı");
+                    warn.setHeaderText("Geçersiz Miktar");
+                    warn.setContentText("İade miktarı stoktaki adetten fazla olamaz!");
+                    warn.showAndWait();
+                    return;
+                }
+
+                // Eğer tamamı iade ediliyorsa silme onayı al
+                if (iadeMiktar == mevcutAdet) {
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirm.setTitle("Tamamını İade Et");
+                    confirm.setHeaderText("Tüm stok iade edilecek!");
+                    confirm.setContentText("Bu ürün tamamen stoktan kaldırılacak. Devam etmek istiyor musunuz?");
+                    confirm.showAndWait().ifPresent(response -> {
+                        if (response == ButtonType.OK) {
+                            urunuTamamenSil(secilen.idProperty().get());
+                            bilgiMesaji("Tüm ürün başarıyla iade edildi ve stoktan kaldırıldı!");
+                            lastikleriYukle();
+                        }
+                    });
+                } else {
+                    // Stoktan düş
+                    String sql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+
+                    try (Connection conn = DatabaseConnection.baglan();
+                         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                        ps.setInt(1, iadeMiktar);
+                        ps.setInt(2, secilen.idProperty().get());
+                        ps.executeUpdate();
+                    }
+
+                    bilgiMesaji("Stoktan " + iadeMiktar + " adet iade edildi!");
+                    lastikleriYukle();
+                }
+
+            } catch (NumberFormatException e) {
+                hataMesaji("Lütfen geçerli bir sayı girin!");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                hataMesaji("İade işlemi sırasında hata oluştu!\n" + ex.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Ürünü tamamen veritabanından siler.
+     */
+    private void urunuTamamenSil(int urunId) {
+        String sql = "DELETE FROM urunler WHERE id = ?";
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, urunId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            hataMesaji("Ürün silinirken hata oluştu!\n" + e.getMessage());
+        }
+    }
+
+    /**
+     * Bilgi mesajı gösterir.
+     */
+    private void bilgiMesaji(String mesaj) {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Bilgi");
+        info.setHeaderText(null);
+        info.setContentText(mesaj);
+        info.showAndWait();
+    }
+
+    /**
+     * Hata mesajı gösterir.
+     */
+    private void hataMesaji(String mesaj) {
+        Alert err = new Alert(Alert.AlertType.ERROR);
+        err.setTitle("Hata");
+        err.setHeaderText(null);
+        err.setContentText(mesaj);
+        err.showAndWait();
+    }
+
 }

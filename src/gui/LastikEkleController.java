@@ -6,108 +6,129 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import model.KeyValue;
+import javafx.scene.paint.Color;
+import javafx.scene.control.cell.*;
+import javafx.scene.control.ListCell;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Optional;
 
 public class LastikEkleController {
 
-    @FXML private ComboBox<String> comboMarka, comboTip, comboEbat, comboHiz, comboYuk;
+    @FXML private ComboBox<KeyValue> comboMarka, comboTip, comboEbat, comboHiz, comboYuk;
     @FXML private TextField txtModel, txtAlis, txtSatis, txtAdet;
 
     @FXML
     public void initialize() {
         refreshCombos();
+
+        // 🔹 ComboBox yazılarını beyaz yapmak
+        makeComboTextWhite(comboMarka);
+        makeComboTextWhite(comboTip);
+        makeComboTextWhite(comboEbat);
+        makeComboTextWhite(comboHiz);
+        makeComboTextWhite(comboYuk);
     }
 
+    /**
+     * Tüm ComboBox'ları veritabanından yeniler.
+     */
     private void refreshCombos() {
-        comboMarka.setItems(DatabaseFunctions.getMarkalar());
-        comboTip.setItems(DatabaseFunctions.getTipler());
-        comboEbat.setItems(DatabaseFunctions.getEbatlar());
-        comboHiz.setItems(DatabaseFunctions.getHizEndeksleri());
-        comboYuk.setItems(DatabaseFunctions.getYukEndeksleri());
+        comboMarka.setItems(DatabaseFunctions.markalariGetir());
+        comboTip.setItems(DatabaseFunctions.tipleriGetir());
+        comboHiz.setItems(DatabaseFunctions.hizGetir());
+        comboYuk.setItems(DatabaseFunctions.yukGetir());
+        comboEbat.setItems(DatabaseFunctions.ebatlariGetir());
+    }
+
+    /**
+     * ComboBox içindeki metinleri (hem seçili hem açılır liste) beyaz gösterir.
+     */
+    private <T> void makeComboTextWhite(ComboBox<T> combo) {
+        // Açılır liste (list cells)
+        combo.setCellFactory(listView -> new ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                    setTextFill(Color.WHITE); // liste içindeki yazılar beyaz
+                }
+            }
+        });
+
+        // Seçili öğe (kapalı durumdaki görünüm)
+        combo.setButtonCell(new ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                    setTextFill(Color.WHITE); // seçili öğe beyaz
+                }
+            }
+        });
     }
 
     @FXML
     private void handleKaydet() {
-        String marka = comboMarka.getValue();
-        String model = txtModel.getText();
-        String tip = comboTip.getValue();
-        String ebat = comboEbat.getValue();
-        String hiz = comboHiz.getValue();
-        String yuk = comboYuk.getValue();
-        String alis = txtAlis.getText();
-        String satis = txtSatis.getText();
-        String adet = txtAdet.getText();
+        KeyValue marka = comboMarka.getValue();
+        KeyValue tip = comboTip.getValue();
+        KeyValue ebat = comboEbat.getValue();
+        KeyValue hiz = comboHiz.getValue();
+        KeyValue yuk = comboYuk.getValue();
 
-        if (marka == null || model.isEmpty() || tip == null || ebat == null ||
-                hiz == null || yuk == null || alis.isEmpty() || satis.isEmpty() || adet.isEmpty()) {
+        String model = txtModel.getText().trim();
+        String alis = txtAlis.getText().trim();
+        String satis = txtSatis.getText().trim();
+        String adet = txtAdet.getText().trim();
+
+        if (marka == null || tip == null || ebat == null || hiz == null || yuk == null ||
+                model.isEmpty() || alis.isEmpty() || satis.isEmpty() || adet.isEmpty()) {
             alert(Alert.AlertType.WARNING, "Eksik Bilgi", "Lütfen tüm alanları doldurun!");
             return;
         }
 
         try (Connection conn = DatabaseConnection.baglan()) {
-            int markaId = DatabaseFunctions.getIdByName("markalar", marka, conn);
-            int tipId = DatabaseFunctions.getIdByName("tipler", tip, conn);
-            int ebatId = DatabaseFunctions.getIdByName("ebatlar", ebat, conn);
-            int hizId = DatabaseFunctions.getIdByName("hizEndeksleri", hiz, conn);
-            int yukId = DatabaseFunctions.getIdByName("yukEndeksleri", yuk, conn);
 
-            BigDecimal alisF = new BigDecimal(alis);
-            BigDecimal satisF = new BigDecimal(satis);
-            int adetInt = Integer.parseInt(adet);
+            String sql = """
+                INSERT INTO urunler 
+                (markaId, model, tipId, ebatId, hizEndeksId, yukEndeksId, alisFiyati, satisFiyati, adet, eklenmeTarihi, aktif)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 1)
+                """;
 
-            String check = "SELECT adet FROM urunler WHERE markaId=? AND model=? AND tipId=? AND ebatId=? AND hizEndeksId=? AND yukEndeksId=?";
-            PreparedStatement cs = conn.prepareStatement(check);
-            cs.setInt(1, markaId);
-            cs.setString(2, model);
-            cs.setInt(3, tipId);
-            cs.setInt(4, ebatId);
-            cs.setInt(5, hizId);
-            cs.setInt(6, yukId);
-            ResultSet rs = cs.executeQuery();
+            var ps = conn.prepareStatement(sql);
+            ps.setInt(1, marka.getId());
+            ps.setString(2, model);
+            ps.setInt(3, tip.getId());
+            ps.setInt(4, ebat.getId());
+            ps.setInt(5, hiz.getId());
+            ps.setInt(6, yuk.getId());
+            ps.setBigDecimal(7, new java.math.BigDecimal(alis));
+            ps.setBigDecimal(8, new java.math.BigDecimal(satis));
+            ps.setInt(9, Integer.parseInt(adet));
 
-            if (rs.next()) {
-                int yeni = rs.getInt("adet") + adetInt;
-                String update = "UPDATE urunler SET adet=?, alisFiyati=?, satisFiyati=?, guncellenmeTarihi=GETDATE() WHERE markaId=? AND model=? AND tipId=? AND ebatId=? AND hizEndeksId=? AND yukEndeksId=?";
-                PreparedStatement ps = conn.prepareStatement(update);
-                ps.setInt(1, yeni);
-                ps.setBigDecimal(2, alisF);
-                ps.setBigDecimal(3, satisF);
-                ps.setInt(4, markaId);
-                ps.setString(5, model);
-                ps.setInt(6, tipId);
-                ps.setInt(7, ebatId);
-                ps.setInt(8, hizId);
-                ps.setInt(9, yukId);
-                ps.executeUpdate();
-                alert(Alert.AlertType.INFORMATION, "Stok Güncellendi", "Yeni stok: " + yeni);
-            } else {
-                String insert = "INSERT INTO urunler (markaId, model, tipId, ebatId, hizEndeksId, yukEndeksId, adet, alisFiyati, satisFiyati, eklenmeTarihi, guncellenmeTarihi, aktif) VALUES (?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE(),1)";
-                PreparedStatement ps = conn.prepareStatement(insert);
-                ps.setInt(1, markaId);
-                ps.setString(2, model);
-                ps.setInt(3, tipId);
-                ps.setInt(4, ebatId);
-                ps.setInt(5, hizId);
-                ps.setInt(6, yukId);
-                ps.setInt(7, adetInt);
-                ps.setBigDecimal(8, alisF);
-                ps.setBigDecimal(9, satisF);
-                ps.executeUpdate();
-                alert(Alert.AlertType.INFORMATION, "Başarılı", "Yeni ürün stoğa eklendi.");
-            }
+            ps.executeUpdate();
 
+            alert(Alert.AlertType.INFORMATION, "Başarılı", "Lastik başarıyla eklendi!");
             clear();
+
         } catch (Exception e) {
-            alert(Alert.AlertType.ERROR, "Hata", e.getMessage());
+            e.printStackTrace();
+            alert(Alert.AlertType.ERROR, "Hata", "Kayıt eklenirken bir hata oluştu:\n" + e.getMessage());
         }
     }
 
+
+    /**
+     * Alanları temizler.
+     */
     private void clear() {
         txtModel.clear();
         txtAlis.clear();
@@ -120,21 +141,278 @@ public class LastikEkleController {
         comboYuk.getSelectionModel().clearSelection();
     }
 
-    @FXML private void handleMarkaEkle() { addNewValue("markalar", "Yeni Marka Ekle"); }
-    @FXML private void handleTipEkle() { addNewValue("tipler", "Yeni Tip Ekle"); }
-    @FXML private void handleEbatEkle() { addNewValue("ebatlar", "Yeni Ebat Ekle"); }
-    @FXML private void handleHizEkle() { addNewValue("hizEndeksleri", "Yeni Hız Endeksi Ekle"); }
-    @FXML private void handleYukEkle() { addNewValue("yukEndeksleri", "Yeni Yük Endeksi Ekle"); }
+    private void alert(Alert.AlertType t, String title, String msg) {
+        Alert a = new Alert(t);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
 
-    private void addNewValue(String table, String title) {
+    // --- Yeni Ekleme Fonksiyonları ---
+
+    @FXML
+    private void handleMarkaEkle() {
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle(title);
-        dialog.setHeaderText(null);
-        dialog.setContentText("Değer girin:");
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(value -> {
-            DatabaseFunctions.addValue(table, value);
-            refreshCombos();
+        dialog.setTitle("Yeni Marka Ekle");
+        dialog.setHeaderText("Yeni bir marka ekleyin");
+        dialog.setContentText("Marka adı:");
+
+        dialog.showAndWait().ifPresent(markaAdi -> {
+            if (!markaAdi.trim().isEmpty()) {
+                try {
+                    boolean basarili = DatabaseFunctions.markaEkle(markaAdi.trim());
+
+                    if (basarili) {
+                        alert(Alert.AlertType.INFORMATION, "Başarılı", "Marka eklendi: " + markaAdi);
+
+                        // ComboBox yenileme ve seçili yapma
+                        comboMarka.setItems(DatabaseFunctions.markalariGetir());
+                        for (var item : comboMarka.getItems()) {
+                            if (item.getName().equalsIgnoreCase(markaAdi.trim())) {
+                                comboMarka.getSelectionModel().select(item);
+                                break;
+                            }
+                        }
+                        makeComboTextWhite(comboMarka);
+
+                    } else {
+                        // Marka zaten varsa ya da veritabanı false döndürdüyse
+                        alert(Alert.AlertType.WARNING, "Uyarı", "Bu marka zaten mevcut veya eklenemedi!");
+                    }
+
+                } catch (Exception e) {
+                    // Her türlü veritabanı hatasını burada yakalarız
+                    e.printStackTrace();
+                    alert(Alert.AlertType.ERROR, "Hata", "Marka eklenirken bir hata oluştu:\n" + e.getMessage());
+                }
+            } else {
+                alert(Alert.AlertType.WARNING, "Eksik Bilgi", "Marka adı boş olamaz!");
+            }
+        });
+    }
+
+
+    @FXML
+    private void handleTipEkle() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Yeni Tip Ekle");
+        dialog.setHeaderText("Yeni bir lastik tipi ekleyin");
+        dialog.setContentText("Tip adı:");
+
+        dialog.showAndWait().ifPresent(tipAdi -> {
+            if (!tipAdi.trim().isEmpty()) {
+                try {
+                    boolean basarili = DatabaseFunctions.tipEkle(tipAdi.trim());
+
+                    if (basarili) {
+                        alert(Alert.AlertType.INFORMATION, "Başarılı", "Tip eklendi: " + tipAdi);
+
+                        // ComboBox’ı yenile ve eklenen tipi seçili yap
+                        comboTip.setItems(DatabaseFunctions.tipleriGetir());
+                        for (var item : comboTip.getItems()) {
+                            if (item.getName().equalsIgnoreCase(tipAdi.trim())) {
+                                comboTip.getSelectionModel().select(item);
+                                break;
+                            }
+                        }
+
+                        // Yazı rengini tekrar beyaz yap
+                        makeComboTextWhite(comboTip);
+
+                    } else {
+                        alert(Alert.AlertType.WARNING, "Uyarı", "Bu tip zaten mevcut veya eklenemedi!");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    alert(Alert.AlertType.ERROR, "Hata", "Tip eklenirken bir hata oluştu:\n" + e.getMessage());
+                }
+            } else {
+                alert(Alert.AlertType.WARNING, "Eksik Bilgi", "Tip adı boş olamaz!");
+            }
+        });
+    }
+
+
+    @FXML
+    private void handleHizEkle() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Yeni Hız Endeksi Ekle");
+        dialog.setHeaderText("Yeni bir hız endeksi ekleyin");
+
+        TextField txtHiz = new TextField();
+        txtHiz.setPromptText("Hız Endeksi (örnek: T, H, V)");
+
+        TextField txtMaksHiz = new TextField();
+        txtMaksHiz.setPromptText("Maksimum Hız (örnek: 190, 240)");
+
+        VBox vbox = new VBox(10, txtHiz, txtMaksHiz);
+        dialog.getDialogPane().setContent(vbox);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String hizEndeks = txtHiz.getText().trim();
+                String maksHiz = txtMaksHiz.getText().trim();
+
+                if (hizEndeks.isEmpty() || maksHiz.isEmpty()) {
+                    alert(Alert.AlertType.WARNING, "Eksik Bilgi", "Lütfen tüm alanları doldurun!");
+                    return;
+                }
+
+                try {
+                    boolean basarili = DatabaseFunctions.hizEkle(hizEndeks, maksHiz);
+
+                    if (basarili) {
+                        alert(Alert.AlertType.INFORMATION, "Başarılı",
+                                "Hız endeksi eklendi: " + hizEndeks + " (" + maksHiz + " km/s)");
+
+                        // ComboBox’ı yenile
+                        comboHiz.setItems(DatabaseFunctions.hizGetir());
+
+                        // Yeni eklenen değeri seçili yap
+                        for (var item : comboHiz.getItems()) {
+                            if (item.getName().equalsIgnoreCase(hizEndeks)) {
+                                comboHiz.getSelectionModel().select(item);
+                                break;
+                            }
+                        }
+
+                        // Yazı rengini tekrar beyaz yap
+                        makeComboTextWhite(comboHiz);
+
+                    } else {
+                        alert(Alert.AlertType.WARNING, "Uyarı", "Bu hız endeksi zaten mevcut veya eklenemedi!");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    alert(Alert.AlertType.ERROR, "Hata", "Hız endeksi eklenirken bir hata oluştu:\n" + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void handleYukEkle() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Yeni Yük Endeksi Ekle");
+        dialog.setHeaderText("Yeni bir yük endeksi ekleyin");
+
+        TextField txtYuk = new TextField();
+        txtYuk.setPromptText("Yük Endeksi (örnek: 91, 105)");
+
+        TextField txtKg = new TextField();
+        txtKg.setPromptText("Lastik Başına Düşen Kg (örnek: 615, 950)");
+
+        VBox vbox = new VBox(10, txtYuk, txtKg);
+        dialog.getDialogPane().setContent(vbox);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String yukEndeks = txtYuk.getText().trim();
+                String kgDegeri = txtKg.getText().trim();
+
+                if (yukEndeks.isEmpty() || kgDegeri.isEmpty()) {
+                    alert(Alert.AlertType.WARNING, "Eksik Bilgi", "Lütfen tüm alanları doldurun!");
+                    return;
+                }
+
+                try {
+                    boolean basarili = DatabaseFunctions.yukEkle(yukEndeks, kgDegeri);
+
+                    if (basarili) {
+                        alert(Alert.AlertType.INFORMATION, "Başarılı",
+                                "Yük endeksi eklendi: " + yukEndeks + " (" + kgDegeri + " kg)");
+
+                        // ComboBox’ı yenile
+                        comboYuk.setItems(DatabaseFunctions.yukGetir());
+
+                        // Yeni eklenen değeri seçili yap
+                        for (var item : comboYuk.getItems()) {
+                            if (item.getName().equalsIgnoreCase(yukEndeks)) {
+                                comboYuk.getSelectionModel().select(item);
+                                break;
+                            }
+                        }
+
+                        // Yazı rengini beyaz tut
+                        makeComboTextWhite(comboYuk);
+
+                    } else {
+                        alert(Alert.AlertType.WARNING, "Uyarı", "Bu yük endeksi zaten mevcut veya eklenemedi!");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    alert(Alert.AlertType.ERROR, "Hata", "Yük endeksi eklenirken bir hata oluştu:\n" + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void handleEbatEkle() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Yeni Ebat Ekle");
+        dialog.setHeaderText("Yeni bir lastik ölçüsü ekleyin (örnek: 205 55 16)");
+
+        TextField txtGenislik = new TextField();
+        txtGenislik.setPromptText("Genişlik (örnek: 205)");
+
+        TextField txtYukseklik = new TextField();
+        txtYukseklik.setPromptText("Yükseklik (örnek: 55)");
+
+        TextField txtJant = new TextField();
+        txtJant.setPromptText("Jant (örnek: 16)");
+
+        VBox vbox = new VBox(10, txtGenislik, txtYukseklik, txtJant);
+        dialog.getDialogPane().setContent(vbox);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                try {
+                    // ✅ Kullanıcı girişini sayıya çevir
+                    double g = Double.parseDouble(txtGenislik.getText().trim());
+                    double y = Double.parseDouble(txtYukseklik.getText().trim());
+                    double j = Double.parseDouble(txtJant.getText().trim());
+
+                    // ✅ Veritabanına ekleme işlemi
+                    try {
+                        boolean basarili = DatabaseFunctions.ebatEkle(g, y, j);
+
+                        if (basarili) {
+                            String ebatAdi = String.format("%.0f/%.0f/R%.0f", g, y, j);
+                            alert(Alert.AlertType.INFORMATION, "Başarılı", "Ebat eklendi: " + ebatAdi);
+
+                            // ComboBox’ı yenile ve yeni ekleneni seçili yap
+                            comboEbat.setItems(DatabaseFunctions.ebatlariGetir());
+                            for (var item : comboEbat.getItems()) {
+                                if (item.getName().equalsIgnoreCase(ebatAdi)) {
+                                    comboEbat.getSelectionModel().select(item);
+                                    break;
+                                }
+                            }
+
+                            // Yazı rengini tekrar beyaz yap
+                            makeComboTextWhite(comboEbat);
+
+                        } else {
+                            alert(Alert.AlertType.WARNING, "Uyarı", "Bu ebat zaten mevcut veya eklenemedi!");
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        alert(Alert.AlertType.ERROR, "Hata", "Ebat eklenirken bir hata oluştu:\n" + ex.getMessage());
+                    }
+
+                } catch (NumberFormatException e) {
+                    alert(Alert.AlertType.WARNING, "Geçersiz Giriş", "Lütfen sadece sayısal değerler girin!");
+                }
+            }
         });
     }
 
@@ -146,13 +424,5 @@ public class LastikEkleController {
         } catch (Exception e) {
             alert(Alert.AlertType.ERROR, "Hata", e.getMessage());
         }
-    }
-
-    private void alert(Alert.AlertType t, String title, String msg) {
-        Alert a = new Alert(t);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
     }
 }

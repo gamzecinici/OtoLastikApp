@@ -8,122 +8,138 @@
 <AnchorPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="gui.PanelController"
-            prefWidth="900" prefHeight="600"
+            prefWidth="1100" prefHeight="700"
             style="-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b);">
 
     <children>
 
-        <!-- ÜST BAR -->
-        <HBox spacing="30" alignment="CENTER_LEFT"
-              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="30" AnchorPane.rightAnchor="30"
-              style="-fx-background-color: rgba(255,255,255,0.04);
-                     -fx-background-radius: 15;
-                     -fx-padding: 15;
-                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 15, 0.2, 0, 3);">
+        <!-- 🔷 ÜST BAR (iki katmanlı yapı) -->
+        <VBox spacing="10" alignment="CENTER_LEFT"
+              AnchorPane.topAnchor="30" AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
+              style="-fx-background-color: rgba(255,255,255,0.05);
+                     -fx-background-radius: 18;
+                     -fx-padding: 20 35 20 35;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 18, 0.2, 0, 3);">
 
-            <!-- 🔹 LOGO ARKA PLANI -->
-            <StackPane prefWidth="130" prefHeight="90"
-                       style="-fx-background-color: linear-gradient(to bottom right, #e0e6ed, #cfd8dc);
-                              -fx-background-radius: 12;
-                              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8,0,0,2);">
-                <ImageView fx:id="logoView" fitHeight="70" fitWidth="70"
-                           style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8,0,0,0);"/>
-            </StackPane>
+            <!-- 🔹 ÜST SATIR (logo + tarih/saat + çıkış) -->
+            <HBox spacing="25" alignment="CENTER_LEFT">
 
-            <!-- Tarih & Saat -->
-            <VBox spacing="3" alignment="CENTER_LEFT">
-                <Label fx:id="dateLabel" text="13.10.2025"
-                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e0e0e0;" />
-                <Label fx:id="timeLabel" text="22:25:05"
-                       style="-fx-font-size: 26px; -fx-font-family: 'Consolas'; -fx-text-fill: #90caf9;" />
-            </VBox>
+                <!-- Logo -->
+                <StackPane prefWidth="160" prefHeight="100"
+                           style="-fx-background-color: linear-gradient(to bottom right, #e0e6ed, #cfd8dc);
+                                  -fx-background-radius: 14;">
+                    <ImageView fx:id="logoView" fitHeight="90" fitWidth="120" preserveRatio="true"/>
+                </StackPane>
 
-            <!-- Boşluk -->
-            <Region HBox.hgrow="ALWAYS" />
+                <!-- Tarih & Saat -->
+                <VBox spacing="3" alignment="CENTER_LEFT">
+                    <Label fx:id="dateLabel"
+                           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #e0e0e0;"/>
+                    <Label fx:id="timeLabel"
+                           style="-fx-font-size: 30px; -fx-font-family: 'Consolas'; -fx-text-fill: #90caf9;"/>
+                </VBox>
 
-            <!-- Özet Bilgi + Çıkış -->
-            <HBox spacing="25" alignment="CENTER_RIGHT">
-
-                <Label fx:id="toplamUrunLabel"
-                       text="📦 Ürünler: 0"
-                       style="-fx-font-size: 16px; -fx-text-fill: #80cbc4; -fx-font-weight: bold;"/>
-
-                <Label fx:id="toplamSatisLabel"
-                       text="💰 Satışlar: 0"
-                       style="-fx-font-size: 16px; -fx-text-fill: #ffab91; -fx-font-weight: bold;"/>
+                <Region HBox.hgrow="ALWAYS"/>
 
                 <!-- Çıkış Butonu -->
                 <Button text="🚪 Çıkış Yap"
                         onAction="#handleCikisYap"
                         style="-fx-background-color: linear-gradient(to right, #ef5350, #d32f2f);
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
+                               -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-background-radius: 10;
                                -fx-cursor: hand;
                                -fx-pref-width: 120;
-                               -fx-pref-height: 35;
-                               -fx-effect: dropshadow(gaussian, rgba(239,83,80,0.4), 10,0.2,0,3);"/>
+                               -fx-pref-height: 35;"/>
             </HBox>
-        </HBox>
 
-        <!-- ORTA ALAN -->
-        <VBox alignment="CENTER" spacing="25"
-              AnchorPane.topAnchor="130" AnchorPane.bottomAnchor="80"
+            <!-- 🔹 ALT SATIR (veritabanı özet bilgileri) -->
+            <HBox spacing="50" alignment="CENTER_RIGHT"
+                  style="-fx-padding: 10 0 0 0;">
+
+                <VBox alignment="CENTER">
+                    <Label text="🧩 Ürün Çeşidi"
+                           style="-fx-text-fill: #9ca3af; -fx-font-size: 14px;"/>
+                    <Label fx:id="urunCesidiLabel"
+                           text="0"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <VBox alignment="CENTER">
+                    <Label text="📦 Toplam Ürün"
+                           style="-fx-text-fill: #9ca3af; -fx-font-size: 14px;"/>
+                    <Label fx:id="toplamUrunLabel"
+                           text="0"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <VBox alignment="CENTER">
+                    <Label text="💰 Toplam Satış"
+                           style="-fx-text-fill: #9ca3af; -fx-font-size: 14px;"/>
+                    <Label fx:id="toplamSatisLabel"
+                           text="₺0,00"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <VBox alignment="CENTER">
+                    <Label text="💸 Toplam Alış"
+                           style="-fx-text-fill: #9ca3af; -fx-font-size: 14px;"/>
+                    <Label fx:id="toplamAlisLabel"
+                           text="₺0,00"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- 🔸 ORTA MENÜ -->
+        <VBox alignment="CENTER" spacing="35"
+              AnchorPane.topAnchor="210" AnchorPane.bottomAnchor="100"
               AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
             <Label text="İŞLEM MENÜSÜ"
-                   style="-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;" />
+                   style="-fx-font-size: 24px; -fx-text-fill: white; -fx-font-weight: bold;"/>
 
-            <HBox spacing="30" alignment="CENTER">
+            <HBox spacing="40" alignment="CENTER">
 
-                <!-- Ürünler -->
                 <Button fx:id="btnLastikler" text="📦 Ürünler"
                         onAction="#handleLastikler"
                         style="-fx-background-color: linear-gradient(to right, #2196f3, #1e88e5);
                                -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-background-radius: 12;
-                               -fx-pref-width: 180; -fx-pref-height: 45;
-                               -fx-cursor: hand;
-                               -fx-effect: dropshadow(gaussian, rgba(33,150,243,0.4), 10, 0.2, 0, 3);"/>
+                               -fx-pref-width: 200; -fx-pref-height: 50;
+                               -fx-cursor: hand;"/>
 
-                <!-- Yeni Ürün Ekle -->
                 <Button fx:id="btnLastikEkle" text="➕ Yeni Ürün Ekle"
                         onAction="#handleLastikEkle"
                         style="-fx-background-color: linear-gradient(to right, #4caf50, #2e7d32);
                                -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-background-radius: 12;
-                               -fx-pref-width: 180; -fx-pref-height: 45;
-                               -fx-cursor: hand;
-                               -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.4), 10, 0.2, 0, 3);"/>
+                               -fx-pref-width: 200; -fx-pref-height: 50;
+                               -fx-cursor: hand;"/>
 
-                <!-- Satış Yap -->
                 <Button fx:id="btnSatislar" text="💳 Satış Yap"
                         onAction="#handleSatislar"
                         style="-fx-background-color: linear-gradient(to right, #ff9800, #ef6c00);
                                -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-background-radius: 12;
-                               -fx-pref-width: 180; -fx-pref-height: 45;
-                               -fx-cursor: hand;
-                               -fx-effect: dropshadow(gaussian, rgba(255,152,0,0.4), 10, 0.2, 0, 3);"/>
+                               -fx-pref-width: 200; -fx-pref-height: 50;
+                               -fx-cursor: hand;"/>
 
-                <!-- Satış Listesi -->
                 <Button fx:id="btnSatisListesi" text="📊 Satışlar"
                         onAction="#handleSatislar"
                         style="-fx-background-color: linear-gradient(to right, #9c27b0, #6a1b9a);
                                -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-background-radius: 12;
-                               -fx-pref-width: 180; -fx-pref-height: 45;
-                               -fx-cursor: hand;
-                               -fx-effect: dropshadow(gaussian, rgba(156,39,176,0.4), 10, 0.2, 0, 3);"/>
+                               -fx-pref-width: 200; -fx-pref-height: 50;
+                               -fx-cursor: hand;"/>
             </HBox>
         </VBox>
 
-        <!-- ALT BİLGİ -->
+        <!-- 🔹 ALT BİLGİ -->
         <Label text="© 2025 Yılmaz &amp; Ünal Oto Lastik"
-               AnchorPane.bottomAnchor="15"
+               AnchorPane.bottomAnchor="20"
                AnchorPane.leftAnchor="0"
                AnchorPane.rightAnchor="0"
                alignment="CENTER"
-               style="-fx-text-fill: #9ca3af; -fx-font-size: 12px;"/>
+               style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;"/>
     </children>
 </AnchorPane>

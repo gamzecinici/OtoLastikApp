@@ -66,6 +66,7 @@
 
 
 
+
             <!-- 🔘 Butonlar -->
             <HBox alignment="CENTER_RIGHT" spacing="12">
                 <Button text="+ Stok Artır"
@@ -89,6 +90,18 @@
                                -fx-pref-width: 120;
                                -fx-font-size: 13px;
                                -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+
+                <Button text="↩ İade Et"
+                        onAction="#handleIadeEt"
+                        style="-fx-background-color: linear-gradient(to right, #ca8a04, #eab308);
+               -fx-text-fill: white;
+               -fx-font-weight: bold;
+               -fx-background-radius: 10;
+               -fx-pref-height: 36;
+               -fx-pref-width: 120;
+               -fx-font-size: 13px;
+               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+
             </HBox>
         </VBox>
     </children>

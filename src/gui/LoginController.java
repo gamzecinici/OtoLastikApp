@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import javafx.scene.input.KeyCode; // 🔹 Enter tuşu için gerekli
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,24 +26,31 @@ public class LoginController {
     @FXML private Label errorLabel;
     @FXML private ImageView logoImage;
 
-    // Ekran açıldığında çalışır
     @FXML
     public void initialize() {
         try {
-            // 🔹 Logo dosyasının yolu (senin dizinine göre)
             String path = "C:/Users/Gamze/Desktop/lastikGUI/images/logo.png";
-
-            // 🔹 Dosyadan resmi oku ve ImageView’e yükle
             FileInputStream input = new FileInputStream(path);
             Image logo = new Image(input);
             logoImage.setImage(logo);
-
         } catch (Exception e) {
             System.err.println("❌ Logo yüklenemedi: " + e.getMessage());
         }
+
+        // 🔹 Enter tuşuna basıldığında giriş işlemini tetikler
+        usernameField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
+
+        passwordField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
     }
 
-    // Giriş butonuna tıklandığında çalışır
     @FXML
     private void handleLogin() {
         String u = usernameField.getText() == null ? "" : usernameField.getText().trim();
