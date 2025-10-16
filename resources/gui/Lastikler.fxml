@@ -64,45 +64,54 @@
                 </style>
             </TableView>
 
-
-
-
             <!-- 🔘 Butonlar -->
             <HBox alignment="CENTER_RIGHT" spacing="12">
+
                 <Button text="+ Stok Artır"
                         onAction="#handleStokArtir"
                         style="-fx-background-color: linear-gradient(to right, #16a34a, #22c55e);
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
-                               -fx-background-radius: 10;
-                               -fx-pref-height: 36;
-                               -fx-pref-width: 120;
-                               -fx-font-size: 13px;
-                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 10;
+                   -fx-pref-height: 36;
+                   -fx-pref-width: 120;
+                   -fx-font-size: 13px;
+                   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
-                <Button text="↩ Geri Dön"
-                        onAction="#handleGeri"
-                        style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
-                               -fx-background-radius: 10;
-                               -fx-pref-height: 36;
-                               -fx-pref-width: 120;
-                               -fx-font-size: 13px;
-                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+                <Button text="💰 Satış Yap"
+                        onAction="#handleSatisYap"
+                        style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6);
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 10;
+                   -fx-pref-height: 36;
+                   -fx-pref-width: 120;
+                   -fx-font-size: 13px;
+                   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
                 <Button text="↩ İade Et"
                         onAction="#handleIadeEt"
                         style="-fx-background-color: linear-gradient(to right, #ca8a04, #eab308);
-               -fx-text-fill: white;
-               -fx-font-weight: bold;
-               -fx-background-radius: 10;
-               -fx-pref-height: 36;
-               -fx-pref-width: 120;
-               -fx-font-size: 13px;
-               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 10;
+                   -fx-pref-height: 36;
+                   -fx-pref-width: 120;
+                   -fx-font-size: 13px;
+                   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
+                <Button text="↩ Geri Dön"
+                        onAction="#handleGeri"
+                        style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 10;
+                   -fx-pref-height: 36;
+                   -fx-pref-width: 120;
+                   -fx-font-size: 13px;
+                   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
             </HBox>
+
         </VBox>
     </children>
 </AnchorPane>

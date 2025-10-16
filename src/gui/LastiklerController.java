@@ -4,11 +4,14 @@ import database.DatabaseConnection;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Lastik;
 import org.controlsfx.control.table.TableFilter;
@@ -52,7 +55,6 @@ public class LastiklerController {
         // Tablonun tamamen yüklendiğinden emin olmak için
         Platform.runLater(() -> TableFilter.forTableView(tableLastikler).apply());
     }
-
 
     /**
      * Veritabanındaki aktif lastik kayıtlarını tabloya yükler.
@@ -271,6 +273,129 @@ public class LastiklerController {
             }
         });
     }
+
+    @FXML
+    private void handleSatisYap() {
+        Lastik seciliLastik = tableLastikler.getSelectionModel().getSelectedItem();
+
+        if (seciliLastik == null) {
+            showWarning("Ürün Seçilmedi", "Lütfen satış yapmak için tablodan bir ürün seçin.");
+            return;
+        }
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Satış İşlemi");
+        dialog.setHeaderText("Seçilen Ürün: " + seciliLastik.getMarka() + " - " + seciliLastik.getTip());
+
+        ButtonType btnSat = new ButtonType("Satışı Kaydet", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnIptal = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnSat, btnIptal);
+
+        TextField txtAdet = new TextField();
+        txtAdet.setPromptText("Satış adedi girin...");
+
+        TextField txtToplam = new TextField();
+        txtToplam.setPromptText("Toplam fiyat ₺");
+        txtToplam.setEditable(true);
+
+        TextField txtAlinan = new TextField();
+        txtAlinan.setPromptText("Müşteriden alınan ₺ (boş bırakılabilir)");
+
+        Label lblFiyat = new Label("Birim fiyat: " + seciliLastik.getSatisFiyati() + " ₺");
+        Label lblStok = new Label("Stoktaki mevcut adet: " + seciliLastik.getAdet());
+
+        VBox vbox = new VBox(10,
+                lblStok,
+                new Label("Satış Adedi:"), txtAdet,
+                lblFiyat,
+                new Label("Toplam Fiyat (₺):"), txtToplam,
+                new Label("Müşteriden Alınan (₺):"), txtAlinan
+        );
+        vbox.setPadding(new Insets(10));
+        dialog.getDialogPane().setContent(vbox);
+
+        // 🔹 Adet girildikçe otomatik hesaplama
+        txtAdet.textProperty().addListener((obs, eski, yeni) -> {
+            try {
+                int adet = Integer.parseInt(yeni);
+                if (adet > seciliLastik.getAdet()) {
+                    txtAdet.setStyle("-fx-border-color: red;");
+                    txtToplam.clear();
+                } else {
+                    txtAdet.setStyle("");
+                    double toplam = adet * seciliLastik.getSatisFiyati();
+                    txtToplam.setText(String.format("%.2f", toplam));
+                }
+            } catch (NumberFormatException e) {
+                txtToplam.clear();
+                txtAdet.setStyle("");
+            }
+        });
+
+        // 🔹 Sadece sayı ve virgül girişi
+        txtToplam.textProperty().addListener((obs, eski, yeni) -> {
+            if (!yeni.matches("[0-9,]*")) txtToplam.setText(eski);
+        });
+        txtAlinan.textProperty().addListener((obs, eski, yeni) -> {
+            if (!yeni.matches("[0-9,]*")) txtAlinan.setText(eski);
+        });
+
+        // 🔹 Satış butonunun kapanma davranışını kontrol et
+        final Button btnSatButton = (Button) dialog.getDialogPane().lookupButton(btnSat);
+        btnSatButton.addEventFilter(ActionEvent.ACTION, event -> {
+            try {
+                int adet = Integer.parseInt(txtAdet.getText());
+                if (adet <= 0) {
+                    showWarning("Hatalı Adet", "Satış adedi 0 veya negatif olamaz!");
+                    event.consume(); // 🔸 Pencere kapanmasın
+                    return;
+                }
+                if (adet > seciliLastik.getAdet()) {
+                    showWarning("Yetersiz Stok", "Stoktaki adetten fazla satış yapılamaz!");
+                    event.consume(); // 🔸 Pencere kapanmasın
+                    return;
+                }
+
+                double toplam = Double.parseDouble(txtToplam.getText().replace(",", "."));
+                double alinan = 0;
+                if (!txtAlinan.getText().isEmpty())
+                    alinan = Double.parseDouble(txtAlinan.getText().replace(",", "."));
+
+                double kalanBorc = toplam - alinan;
+
+                // 🔹 Satış sonucu penceresi
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Satış Tamamlandı");
+                alert.setHeaderText("Satış başarıyla hesaplandı!");
+                alert.setContentText(
+                        "Ürün: " + seciliLastik.getMarka() + " " + seciliLastik.getEbat() + "\n" +
+                                "Adet: " + adet + "\n" +
+                                "Toplam Tutar: " + String.format("%.2f ₺", toplam) + "\n" +
+                                "Alınan: " + String.format("%.2f ₺", alinan) + "\n" +
+                                "Kalan Borç: " + String.format("%.2f ₺", kalanBorc)
+                );
+                alert.showAndWait();
+
+                // 💾 Burada satış veritabanına kaydedilebilir
+            } catch (NumberFormatException e) {
+                showWarning("Geçersiz Giriş", "Lütfen geçerli sayılar girin.");
+                event.consume(); // 🔸 Pencere kapanmasın
+            }
+        });
+
+        dialog.showAndWait();
+    }
+
+    private void showWarning(String baslik, String mesaj) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(mesaj);
+        alert.showAndWait();
+    }
+
+
+
 
     /**
      * Ürünü tamamen veritabanından siler.
