@@ -1,6 +1,7 @@
 package gui;
 
 import database.DatabaseConnection;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,7 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Lastik;
-
+import org.controlsfx.control.table.TableFilter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,7 +37,6 @@ public class LastiklerController {
 
     @FXML
     public void initialize() {
-        // Tablo sütunlarını model property’lerine bağla
         colMarka.setCellValueFactory(data -> data.getValue().markaProperty());
         colTip.setCellValueFactory(data -> data.getValue().tipProperty());
         colEbat.setCellValueFactory(data -> data.getValue().ebatProperty());
@@ -47,9 +47,12 @@ public class LastiklerController {
         colAdet.setCellValueFactory(data -> data.getValue().adetProperty().asObject());
         colTarih.setCellValueFactory(data -> data.getValue().tarihProperty());
 
-        // Verileri yükle
         lastikleriYukle();
+
+        // Tablonun tamamen yüklendiğinden emin olmak için
+        Platform.runLater(() -> TableFilter.forTableView(tableLastikler).apply());
     }
+
 
     /**
      * Veritabanındaki aktif lastik kayıtlarını tabloya yükler.
@@ -58,7 +61,7 @@ public class LastiklerController {
         lastikListesi.clear();
 
         String sql = """
-                SELECT 
+                SELECT
                     u.id,
                     m.markaAdi AS marka,
                     t.tip AS tip,

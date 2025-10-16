@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.LastikEkleController"
+            prefWidth="1100" prefHeight="700"
+            style="-fx-background-color: linear-gradient(to bottom right, #0e1621, #1a2634);">
+
+    <children>
+        <VBox spacing="30" alignment="TOP_CENTER"
+              AnchorPane.topAnchor="40" AnchorPane.leftAnchor="60"
+              AnchorPane.rightAnchor="60" AnchorPane.bottomAnchor="40"
+              style="-fx-background-color: rgba(255,255,255,0.06);
+                     -fx-background-radius: 18;
+                     -fx-padding: 40;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 4);">
+
+            <!-- Başlık -->
+            <Label text="Yeni Ürün Ekle"
+                   style="-fx-font-size: 28px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
+            <!-- Form -->
+            <GridPane hgap="20" vgap="20" alignment="CENTER">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="180" halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints minWidth="90" halignment="CENTER"/>
+                </columnConstraints>
+
+                <!-- Marka -->
+                <Label text="Marka:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <ComboBox fx:id="comboMarka" promptText="Seçiniz"
+                          GridPane.rowIndex="0" GridPane.columnIndex="1"
+                          style="-fx-background-color:#2a3441;
+                                 -fx-border-color:#6b7280;
+                                 -fx-border-radius:8;
+                                 -fx-background-radius:8;
+                                 -fx-text-fill:white;
+                                 -fx-prompt-text-fill:#9ca3af;"/>
+                <Button text="+Ekle" onAction="#handleMarkaEkle"
+                        GridPane.rowIndex="0" GridPane.columnIndex="2"
+                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
+                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+
+                <!-- Model -->
+                <Label text="Model:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <TextField fx:id="txtModel" promptText="Örn: Energy Saver"
+                           GridPane.rowIndex="1" GridPane.columnIndex="1"
+                           style="-fx-background-color:#2a3441;
+                                  -fx-border-color:#6b7280;
+                                  -fx-border-radius:8;
+                                  -fx-background-radius:8;
+                                  -fx-text-fill:white;
+                                  -fx-prompt-text-fill:#9ca3af;"/>
+
+                <!-- Tip -->
+                <Label text="Tip:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <ComboBox fx:id="comboTip" promptText="Seçiniz"
+                          GridPane.rowIndex="2" GridPane.columnIndex="1"
+                          style="-fx-background-color:#2a3441;
+                                 -fx-border-color:#6b7280;
+                                 -fx-border-radius:8;
+                                 -fx-background-radius:8;
+                                 -fx-text-fill:white;
+                                 -fx-prompt-text-fill:#9ca3af;"/>
+                <Button text="+Ekle" onAction="#handleTipEkle"
+                        GridPane.rowIndex="2" GridPane.columnIndex="2"
+                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
+                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+
+                <!-- Ebat -->
+                <Label text="Ebat:" GridPane.rowIndex="3" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <ComboBox fx:id="comboEbat" promptText="Seçiniz"
+                          GridPane.rowIndex="3" GridPane.columnIndex="1"
+                          style="-fx-background-color:#2a3441;
+                                 -fx-border-color:#6b7280;
+                                 -fx-border-radius:8;
+                                 -fx-background-radius:8;
+                                 -fx-text-fill:white;
+                                 -fx-prompt-text-fill:#9ca3af;"/>
+                <Button text="+Ekle" onAction="#handleEbatEkle"
+                        GridPane.rowIndex="3" GridPane.columnIndex="2"
+                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
+                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+
+                <!-- Hız Endeksi -->
+                <Label text="Hız Endeksi:" GridPane.rowIndex="4" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <ComboBox fx:id="comboHiz" promptText="Seçiniz"
+                          GridPane.rowIndex="4" GridPane.columnIndex="1"
+                          style="-fx-background-color:#2a3441;
+                                 -fx-border-color:#6b7280;
+                                 -fx-border-radius:8;
+                                 -fx-background-radius:8;
+                                 -fx-text-fill:white;
+                                 -fx-prompt-text-fill:#9ca3af;"/>
+                <Button text="+Ekle" onAction="#handleHizEkle"
+                        GridPane.rowIndex="4" GridPane.columnIndex="2"
+                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
+                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+
+                <!-- Yük Endeksi -->
+                <Label text="Yük Endeksi:" GridPane.rowIndex="5" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <ComboBox fx:id="comboYuk" promptText="Seçiniz"
+                          GridPane.rowIndex="5" GridPane.columnIndex="1"
+                          style="-fx-background-color:#2a3441;
+                                 -fx-border-color:#6b7280;
+                                 -fx-border-radius:8;
+                                 -fx-background-radius:8;
+                                 -fx-text-fill:white;
+                                 -fx-prompt-text-fill:#9ca3af;"/>
+                <Button text="+Ekle" onAction="#handleYukEkle"
+                        GridPane.rowIndex="5" GridPane.columnIndex="2"
+                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
+                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+
+                <!-- Alış -->
+                <Label text="Alış Fiyatı (₺):" GridPane.rowIndex="6" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <TextField fx:id="txtAlis" promptText="Örn: 850"
+                           GridPane.rowIndex="6" GridPane.columnIndex="1"
+                           style="-fx-background-color:#2a3441;
+                                  -fx-border-color:#6b7280;
+                                  -fx-border-radius:8;
+                                  -fx-background-radius:8;
+                                  -fx-text-fill:white;
+                                  -fx-prompt-text-fill:#9ca3af;"/>
+
+                <!-- Satış -->
+                <Label text="Satış Fiyatı (₺):" GridPane.rowIndex="7" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <TextField fx:id="txtSatis" promptText="Örn: 1150"
+                           GridPane.rowIndex="7" GridPane.columnIndex="1"
+                           style="-fx-background-color:#2a3441;
+                                  -fx-border-color:#6b7280;
+                                  -fx-border-radius:8;
+                                  -fx-background-radius:8;
+                                  -fx-text-fill:white;
+                                  -fx-prompt-text-fill:#9ca3af;"/>
+
+                <!-- Adet -->
+                <Label text="Adet:" GridPane.rowIndex="8" GridPane.columnIndex="0"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
+                <TextField fx:id="txtAdet" promptText="Örn: 10"
+                           GridPane.rowIndex="8" GridPane.columnIndex="1"
+                           style="-fx-background-color:#2a3441;
+                                  -fx-border-color:#6b7280;
+                                  -fx-border-radius:8;
+                                  -fx-background-radius:8;
+                                  -fx-text-fill:white;
+                                  -fx-prompt-text-fill:#9ca3af;"/>
+            </GridPane>
+
+            <!-- Butonlar -->
+            <HBox spacing="20" alignment="CENTER">
+                <Button fx:id="btnKaydet" text="Ürün Ekle" onAction="#handleKaydet"
+                        style="-fx-background-color: linear-gradient(to right,#3b82f6,#2563eb);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:14; -fx-pref-width:170;"/>
+                <Button text="Geri" onAction="#handleGeri"
+                        style="-fx-background-color: linear-gradient(to right,#dc2626,#b91c1c);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:14; -fx-pref-width:130;"/>
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>

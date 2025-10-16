@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gui.LoginController"
+            prefWidth="800" prefHeight="450"
+            style="-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b);">
+
+    <children>
+        <!-- Sol Bölüm (Logo Alanı) -->
+        <StackPane prefWidth="380"
+                   AnchorPane.topAnchor="0"
+                   AnchorPane.bottomAnchor="0"
+                   AnchorPane.leftAnchor="0"
+                   style="-fx-background-color: linear-gradient(to bottom right, #5A7FA3, #8CA7BF);
+                  -fx-border-radius: 0 25 25 0;
+                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 15,0,0,0);">
+
+
+            <ImageView fx:id="logoImage"
+                       fitWidth="270" fitHeight="270"
+                       preserveRatio="true"
+                       style="-fx-effect: dropshadow(gaussian, rgba(255,255,255,0.6), 20, 0, 0, 0);"/>
+        </StackPane>
+
+        <!-- Sağ Bölüm (Giriş Alanı) -->
+        <VBox spacing="18" alignment="CENTER"
+              AnchorPane.leftAnchor="420"
+              AnchorPane.rightAnchor="50"
+              AnchorPane.topAnchor="60"
+              AnchorPane.bottomAnchor="60"
+              style="-fx-background-color: rgba(255,255,255,0.05);
+                     -fx-background-radius: 18;
+                     -fx-padding: 30;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 15,0,0,0);">
+
+            <Label text="KULLANICI GİRİŞİ"
+                   style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #ffffff;"/>
+
+            <TextField fx:id="usernameField" promptText="Kullanıcı Adı"
+                       style="-fx-background-color: #1e293b;
+                              -fx-background-radius: 6;
+                              -fx-text-fill: white;
+                              -fx-prompt-text-fill: #9ca3af;
+                              -fx-pref-width: 250;
+                              -fx-pref-height: 35;"/>
+
+            <PasswordField fx:id="passwordField" promptText="Şifre"
+                           style="-fx-background-color: #1e293b;
+                                  -fx-background-radius: 6;
+                                  -fx-text-fill: white;
+                                  -fx-prompt-text-fill: #9ca3af;
+                                  -fx-pref-width: 250;
+                                  -fx-pref-height: 35;"/>
+
+            <Button text="Giriş Yap"
+                    onAction="#handleLogin"
+                    style="-fx-background-color: linear-gradient(to right, #0066cc, #ff0000);
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 8;
+                           -fx-pref-width: 180;
+                           -fx-pref-height: 35;
+                           -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.2), 3,0,0,0);"/>
+
+            <Label fx:id="errorLabel"
+                   textFill="red"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+            <Label text="© 2025 Yılmaz &amp; Ünal Oto Lastik"
+                   style="-fx-font-size: 12px; -fx-text-fill: #9ca3af; -fx-padding: 10 0 0 0;"/>
+        </VBox>
+    </children>
+</AnchorPane>
