@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.MusterilerController"
+            prefWidth="1000" prefHeight="700"
+            style="-fx-background-color: linear-gradient(to bottom right, #0e1621, #1a2634);">
+
+    <children>
+
+        <!-- Üst Başlık -->
+        <Label text="Müşteri Listesi"
+               AnchorPane.topAnchor="25"
+               AnchorPane.leftAnchor="40"
+               style="-fx-text-fill: white;"
+        >
+            <font>
+                <Font name="Segoe UI Bold" size="26"/>
+            </font>
+        </Label>
+
+        <!-- Tablo -->
+        <TableView fx:id="tableMusteriler"
+                   AnchorPane.topAnchor="80"
+                   AnchorPane.leftAnchor="40"
+                   AnchorPane.rightAnchor="40"
+                   AnchorPane.bottomAnchor="120"
+                   style="-fx-background-radius: 10;
+                          -fx-background-color: rgba(255,255,255,0.08);">
+
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colAdi" text="Adı" prefWidth="120"/>
+                <TableColumn fx:id="colSoyadi" text="Soyadı" prefWidth="120"/>
+                <TableColumn fx:id="colTelefon" text="Telefon" prefWidth="130"/>
+                <TableColumn fx:id="colEmail" text="E-posta" prefWidth="150"/>
+                <TableColumn fx:id="colAdres" text="Adres" prefWidth="200"/>
+                <TableColumn fx:id="colKayitTarihi" text="Kayıt Tarihi" prefWidth="130"/>
+                <TableColumn fx:id="colBorc" text="Borç" prefWidth="100"/>
+            </columns>
+        </TableView>
+
+        <!-- Alt Butonlar -->
+        <HBox spacing="20" alignment="CENTER"
+              AnchorPane.bottomAnchor="40"
+              AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40">
+            <Button fx:id="btnEkle"
+                    text="Müşteri Ekle"
+                    onAction="#handleMusteriEkle"
+                    style="-fx-background-color: #22c55e;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 8;
+                           -fx-padding: 10 20;"/>
+
+            <Button fx:id="btnGuncelle"
+                    text="Müşteriyi Güncelle"
+                    onAction="#handleMusteriGuncelle"
+                    style="-fx-background-color: #3b82f6;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 8;
+                           -fx-padding: 10 20;"/>
+
+            <Button fx:id="btnSil"
+                    text="Müşteriyi Kaldır"
+                    onAction="#handleMusteriSil"
+                    style="-fx-background-color: #ef4444;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 8;
+                           -fx-padding: 10 20;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="btnGeri"
+                    text="Geri"
+                    onAction="#handleGeriDon"
+                    style="-fx-background-color: #64748b;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 8;
+                           -fx-padding: 10 20;"/>
+        </HBox>
+
+    </children>
+</AnchorPane>

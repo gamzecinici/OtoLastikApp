@@ -124,6 +124,20 @@
                                -fx-background-radius: 12;
                                -fx-pref-width: 200; -fx-pref-height: 50;
                                -fx-cursor: hand;"/>
+
+                <Button fx:id="btnMusteriListesi"
+                        id="btnMusteriListesi"
+                        text="👥 Müşteriler"
+                        onAction="#handleMusteriler"
+                        style="-fx-background-color: linear-gradient(to right, #f97316, #ea580c);
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 12;
+                           -fx-pref-width: 200;
+                           -fx-pref-height: 50;
+                           -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 8, 0, 0, 2);"/>
             </HBox>
         </VBox>
 

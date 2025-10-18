@@ -2,7 +2,10 @@ package database;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
 import model.KeyValue;
+import model.Musteri;
+
 import java.sql.*;
 
 /**
@@ -167,4 +170,115 @@ public class DatabaseFunctions {
             return false;
         }
     }
+
+    // -------------------------------------------------------------------
+    // 🔹 TÜM MÜŞTERİLERİ GETİR
+    // -------------------------------------------------------------------
+    public static ObservableList<Musteri> musterileriGetir() {
+        ObservableList<Musteri> liste = FXCollections.observableArrayList();
+        String sql = "SELECT id, adi, soyadi, telefon, email, adres, kayitTarihi, borc FROM musteriler ORDER BY adi ASC";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Musteri m = new Musteri(
+                        rs.getLong("id"),
+                        rs.getString("adi"),
+                        rs.getString("soyadi"),
+                        rs.getString("telefon"),
+                        rs.getString("email"),
+                        rs.getString("adres"),
+                        rs.getString("kayitTarihi"),
+                        rs.getDouble("borc")
+                );
+                liste.add(m);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Müşteri listesi alınırken hata: " + e.getMessage());
+        }
+
+        return liste;
+    }
+
+    // -------------------------------------------------------------------
+    // 🔹 MÜŞTERİ EKLEME METODU
+    // -------------------------------------------------------------------
+    public static boolean musteriEkle(Musteri m) {
+        String sql = "INSERT INTO musteriler (adi, soyadi, telefon, email, adres, borc) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, m.getAdi());
+            ps.setString(2, m.getSoyadi());
+            ps.setString(3, m.getTelefon());
+            ps.setString(4, m.getEmail());
+            ps.setString(5, m.getAdres());
+            ps.setDouble(6, m.getBorc());
+
+            int etkilenen = ps.executeUpdate();
+            return etkilenen > 0;
+
+        } catch (SQLException e) {
+            String msg = e.getMessage();
+
+            // 🔹 Unique constraint kontrolü
+            if (msg != null && msg.contains("UQ__musteril")) {
+                // özel hata fırlat
+                throw new RuntimeException("Bu telefon numarasıyla zaten kayıtlı bir müşteri var!");
+            } else {
+                System.err.println("❌ Müşteri eklenirken hata: " + msg);
+                throw new RuntimeException("Veritabanı hatası: " + msg);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // 🔹 MÜŞTERİ GÜNCELLEME METODU
+    // -------------------------------------------------------------------
+    public static boolean musteriGuncelle(Musteri m) {
+        String sql = "UPDATE musteriler SET adi=?, soyadi=?, telefon=?, email=?, adres=?, borc=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, m.getAdi());
+            ps.setString(2, m.getSoyadi());
+            ps.setString(3, m.getTelefon());
+            ps.setString(4, m.getEmail());
+            ps.setString(5, m.getAdres());
+            ps.setDouble(6, m.getBorc());
+            ps.setLong(7, m.getId());
+
+            int etkilenen = ps.executeUpdate();
+            return etkilenen > 0;
+
+        } catch (Exception e) {
+            System.err.println("❌ Müşteri güncellenirken hata: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // 🔹 MÜŞTERİ SİLME METODU
+    // -------------------------------------------------------------------
+    public static boolean musteriSil(long musteriId) {
+        String sql = "DELETE FROM musteriler WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, musteriId);
+            int etkilenen = ps.executeUpdate();
+            return etkilenen > 0;
+
+        } catch (SQLException e) {
+            System.err.println("❌ Müşteri silinirken hata: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

@@ -37,6 +37,7 @@ public class PanelController {
         veritabaniOzetleriniGetir();
     }
 
+    // 🔹 Logo
     private void logoYukle() {
         try {
             String logoYolu = "C:/Users/Gamze/Desktop/lastikGUI/images/logo.png";
@@ -52,6 +53,7 @@ public class PanelController {
         }
     }
 
+    // 🔹 Tarih - Saat
     private void tarihSaatGuncelle() {
         Timeline clock = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             LocalDateTime now = LocalDateTime.now();
@@ -62,11 +64,20 @@ public class PanelController {
         clock.play();
     }
 
+    // 🔹 Veritabanı Özetleri
     private void veritabaniOzetleriniGetir() {
+
+        // Ürün çeşidi = farklı model sayısı
         String sqlCesit = "SELECT COUNT(DISTINCT model) AS urunCesidi FROM urunler WHERE aktif = 1";
-        String sqlUrun = "SELECT SUM(adet) AS toplamUrun FROM urunler WHERE aktif = 1";
-        String sqlSatis = "SELECT SUM(alinanTutar) AS toplamSatis FROM satislar";
-        String sqlAlis = "SELECT SUM(alisFiyati * alinanAdet) AS toplamAlis FROM urunAlimGecmisi";
+
+        // Toplam ürün adedi
+        String sqlUrun = "SELECT COALESCE(SUM(adet), 0) AS toplamUrun FROM urunler WHERE aktif = 1";
+
+        // Toplam satış = satislar tablosundaki alinacakTutar
+        String sqlSatis = "SELECT COALESCE(SUM(alinacakTutar), 0) AS toplamSatis FROM satislar";
+
+        // Toplam alış = urunler tablosundaki (alisFiyati * adet)
+        String sqlAlis = "SELECT COALESCE(SUM(alisFiyati * adet), 0) AS toplamAlis FROM urunler WHERE aktif = 1";
 
         try (Connection conn = DatabaseConnection.baglan();
              PreparedStatement stmtCesit = conn.prepareStatement(sqlCesit);
@@ -74,21 +85,31 @@ public class PanelController {
              PreparedStatement stmtSatis = conn.prepareStatement(sqlSatis);
              PreparedStatement stmtAlis = conn.prepareStatement(sqlAlis)) {
 
+            // Ürün çeşidi
             ResultSet rsCesit = stmtCesit.executeQuery();
             if (rsCesit.next())
                 urunCesidiLabel.setText(String.valueOf(rsCesit.getInt("urunCesidi")));
 
+            // Toplam ürün
             ResultSet rsUrun = stmtUrun.executeQuery();
             if (rsUrun.next())
                 toplamUrunLabel.setText(String.valueOf(rsUrun.getInt("toplamUrun")));
 
+            // Toplam satış
             ResultSet rsSatis = stmtSatis.executeQuery();
-            if (rsSatis.next())
-                toplamSatisLabel.setText("₺" + paraFormat.format(rsSatis.getDouble("toplamSatis")));
+            if (rsSatis.next()) {
+                double satis = rsSatis.getDouble("toplamSatis");
+                toplamSatisLabel.setText("₺" + paraFormat.format(satis));
+                System.out.println("💰 Toplam Satış: " + satis);
+            }
 
+            // Toplam alış
             ResultSet rsAlis = stmtAlis.executeQuery();
-            if (rsAlis.next())
-                toplamAlisLabel.setText("₺" + paraFormat.format(rsAlis.getDouble("toplamAlis")));
+            if (rsAlis.next()) {
+                double alis = rsAlis.getDouble("toplamAlis");
+                toplamAlisLabel.setText("₺" + paraFormat.format(alis));
+                System.out.println("💸 Toplam Alış: " + alis);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,6 +125,7 @@ public class PanelController {
     @FXML private void handleLastikler() { sayfaGecis("/gui/Lastikler.fxml", "Ürünler"); }
     @FXML private void handleLastikEkle() { sayfaGecis("/gui/LastikEkle.fxml", "Yeni Ürün Ekle"); }
     @FXML private void handleSatislar() { sayfaGecis("/gui/Satislar.fxml", "Satışlar"); }
+    @FXML private void handleMusteriler() {sayfaGecis("/gui/Musteriler.fxml", "Müşteriler"); }
 
     private void sayfaGecis(String fxml, String baslik) {
         try {

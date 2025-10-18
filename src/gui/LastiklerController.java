@@ -15,13 +15,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Lastik;
 import org.controlsfx.control.table.TableFilter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+
+import java.sql.*;
 
 /**
- * Stoktaki lastikleri gösterir ve stok artırma işlemlerini yönetir.
+ * Stoktaki lastikleri gösterir ve stok / satış / iade işlemlerini yönetir.
  */
 public class LastiklerController {
 
@@ -38,6 +36,9 @@ public class LastiklerController {
 
     private final ObservableList<Lastik> lastikListesi = FXCollections.observableArrayList();
 
+    // ======================================================
+    //  BAŞLATMA
+    // ======================================================
     @FXML
     public void initialize() {
         colMarka.setCellValueFactory(data -> data.getValue().markaProperty());
@@ -51,14 +52,12 @@ public class LastiklerController {
         colTarih.setCellValueFactory(data -> data.getValue().tarihProperty());
 
         lastikleriYukle();
-
-        // Tablonun tamamen yüklendiğinden emin olmak için
         Platform.runLater(() -> TableFilter.forTableView(tableLastikler).apply());
     }
 
-    /**
-     * Veritabanındaki aktif lastik kayıtlarını tabloya yükler.
-     */
+    // ======================================================
+    //  LİSTEYİ YÜKLE
+    // ======================================================
     private void lastikleriYukle() {
         lastikListesi.clear();
 
@@ -106,82 +105,259 @@ public class LastiklerController {
             tableLastikler.setItems(lastikListesi);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Hata");
-            alert.setHeaderText("Veriler yüklenirken hata oluştu!");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+            hataMesaji("Veriler yüklenirken hata oluştu:\n" + e.getMessage());
         }
     }
 
-    /**
-     * “Stok Artır” butonu tıklandığında seçilen ürünün stok adedini günceller.
-     */
+    // ======================================================
+    //  STOK ARTIR
+    // ======================================================
     @FXML
     private void handleStokArtir() {
         Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
-
         if (secilen == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Uyarı");
-            alert.setHeaderText("Stok Artırma İşlemi");
-            alert.setContentText("Lütfen önce bir ürün seçin.");
-            alert.showAndWait();
+            showWarning("Stok Artırma", "Lütfen önce bir ürün seçin.");
             return;
         }
 
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Stok Artır");
-        dialog.setHeaderText("Seçilen ürün: " + secilen.markaProperty().get() + " " + secilen.tipProperty().get());
+        dialog.setHeaderText("Seçilen ürün: " + secilen.getMarka() + " " + secilen.getTip());
         dialog.setContentText("Eklenecek adet miktarını girin:");
 
         dialog.showAndWait().ifPresent(giris -> {
             try {
                 int eklenecek = Integer.parseInt(giris);
-                if (eklenecek <= 0) {
-                    throw new NumberFormatException();
-                }
+                if (eklenecek <= 0) throw new NumberFormatException();
 
                 String sql = "UPDATE urunler SET adet = adet + ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
-
                 try (Connection conn = DatabaseConnection.baglan();
                      PreparedStatement ps = conn.prepareStatement(sql)) {
-
                     ps.setInt(1, eklenecek);
-                    ps.setInt(2, secilen.idProperty().get());
+                    ps.setInt(2, secilen.getId());
                     ps.executeUpdate();
                 }
 
-                Alert info = new Alert(Alert.AlertType.INFORMATION);
-                info.setTitle("Başarılı");
-                info.setHeaderText("Stok Güncellendi");
-                info.setContentText("Stok " + eklenecek + " adet artırıldı!");
-                info.showAndWait();
-
-                // Tabloyu yenile
+                bilgiMesaji("Stok " + eklenecek + " adet artırıldı!");
                 lastikleriYukle();
 
-            } catch (NumberFormatException e) {
-                Alert err = new Alert(Alert.AlertType.ERROR);
-                err.setTitle("Hata");
-                err.setHeaderText("Geçersiz Giriş");
-                err.setContentText("Lütfen geçerli bir sayı girin!");
-                err.showAndWait();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Alert err = new Alert(Alert.AlertType.ERROR);
-                err.setTitle("Hata");
-                err.setHeaderText("Stok artırılırken hata oluştu!");
-                err.setContentText(ex.getMessage());
-                err.showAndWait();
+            } catch (Exception e) {
+                hataMesaji("Stok artırılırken hata oluştu:\n" + e.getMessage());
             }
         });
     }
 
+    // ======================================================
+    //  SATIŞ YAP
+    // ======================================================
+    @FXML
+    private void handleSatisYap() {
+        Lastik seciliLastik = tableLastikler.getSelectionModel().getSelectedItem();
+        if (seciliLastik == null) {
+            showWarning("Ürün Seçilmedi", "Lütfen satış yapmak için bir ürün seçin.");
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Satış İşlemi");
+        dialog.setHeaderText("Seçilen Ürün: " + seciliLastik.getMarka() + " - " + seciliLastik.getTip());
+
+        ButtonType btnKaydet = new ButtonType("Satışı Kaydet", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnIptal = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnKaydet, btnIptal);
+
+        TextField txtMusteri = new TextField();
+        txtMusteri.setPromptText("Müşteri adı soyadı...");
+
+        TextField txtAdet = new TextField();
+        txtAdet.setPromptText("Satış adedi...");
+
+        TextField txtAlinan = new TextField();
+        txtAlinan.setPromptText("Alınan tutar ₺ (boş bırakılabilir)");
+
+        Label lblBirim = new Label("Birim fiyat: " + seciliLastik.getSatisFiyati() + " ₺");
+        Label lblStok = new Label("Stokta: " + seciliLastik.getAdet() + " adet");
+        Label lblToplam = new Label("Toplam: 0 ₺");
+
+        VBox vbox = new VBox(10, lblStok,
+                new Label("Müşteri Adı Soyadı:"), txtMusteri,
+                new Label("Satış Adedi:"), txtAdet,
+                lblBirim, lblToplam,
+                new Label("Müşteriden Alınan (₺):"), txtAlinan);
+        vbox.setPadding(new Insets(10));
+        dialog.getDialogPane().setContent(vbox);
+
+        // Toplam hesaplama
+        txtAdet.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                int adet = Integer.parseInt(newVal);
+                if (adet > seciliLastik.getAdet()) {
+                    lblToplam.setText("Yetersiz stok!");
+                    lblToplam.setStyle("-fx-text-fill: red;");
+                } else {
+                    double toplam = adet * seciliLastik.getSatisFiyati();
+                    lblToplam.setText(String.format("Toplam: %.2f ₺", toplam));
+                    lblToplam.setStyle("-fx-text-fill: white;");
+                }
+            } catch (Exception e) {
+                lblToplam.setText("Toplam: 0 ₺");
+            }
+        });
+
+        dialog.setResultConverter(button -> {
+            if (button == btnKaydet) {
+                try {
+                    String musteriAdi = txtMusteri.getText().trim();
+                    int adet = Integer.parseInt(txtAdet.getText().trim());
+                    double alinan = txtAlinan.getText().isEmpty() ? 0 : Double.parseDouble(txtAlinan.getText().replace(",", "."));
+                    double toplam = adet * seciliLastik.getSatisFiyati();
+
+                    if (musteriAdi.isEmpty()) {
+                        showWarning("Eksik Bilgi", "Lütfen müşteri adını girin!");
+                        return null;
+                    }
+                    if (adet <= 0 || adet > seciliLastik.getAdet()) {
+                        showWarning("Hatalı Adet", "Geçerli bir satış adedi girin!");
+                        return null;
+                    }
+
+                    satisKaydet(seciliLastik, musteriAdi, adet, toplam, alinan);
+                    bilgiMesaji("Satış başarıyla kaydedildi!");
+                    lastikleriYukle();
+
+                } catch (Exception e) {
+                    hataMesaji("Satış kaydedilirken hata oluştu:\n" + e.getMessage());
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait();
+    }
+
     /**
-     * “Geri” butonuna basıldığında ana panele döner.
+     * Satışı veritabanına kaydeder (stok düşümü SQL tarafında yapılır).
      */
+    private void satisKaydet(Lastik lastik, String musteriAdi, int adet, double toplam, double alinan) {
+        try (Connection conn = DatabaseConnection.baglan()) {
+            conn.setAutoCommit(false);
+            int musteriId;
+
+            // 🔹 Ad soyad güvenli şekilde ayır
+            String temizAdSoyad = musteriAdi == null ? "" : musteriAdi.trim();
+            if (temizAdSoyad.isEmpty()) {
+                showWarning("Eksik Bilgi", "Lütfen müşteri adını girin!");
+                return;
+            }
+
+            String[] parcalar = temizAdSoyad.split("\\s+", 2);
+            String ad = parcalar[0].trim();
+            String soyad = (parcalar.length > 1) ? parcalar[1].trim() : "Bilinmiyor";
+
+            // 🔹 Var mı kontrol et (case-insensitive)
+            String checkSql = """
+            SELECT id FROM musteriler
+            WHERE LOWER(LTRIM(RTRIM(adi))) = LOWER(?)
+              AND LOWER(LTRIM(RTRIM(soyadi))) = LOWER(?)
+        """;
+            PreparedStatement psCheck = conn.prepareStatement(checkSql);
+            psCheck.setString(1, ad);
+            psCheck.setString(2, soyad);
+            ResultSet rs = psCheck.executeQuery();
+
+            if (rs.next()) {
+                // ✅ Aynı müşteri varsa mevcut ID alınır
+                musteriId = rs.getInt("id");
+            } else {
+                // ✅ Yeni müşteri eklenir
+                String insertMusteri = """
+                INSERT INTO musteriler (adi, soyadi, kayitTarihi, borc)
+                VALUES (?, ?, GETDATE(), 0)
+            """;
+                PreparedStatement psInsert = conn.prepareStatement(insertMusteri, Statement.RETURN_GENERATED_KEYS);
+                psInsert.setString(1, ad);
+                psInsert.setString(2, soyad);
+                psInsert.executeUpdate();
+
+                ResultSet gen = psInsert.getGeneratedKeys();
+                gen.next();
+                musteriId = gen.getInt(1);
+            }
+
+            // 🔹 Satış kaydı
+            String insertSatis = """
+            INSERT INTO satislar (urunId, musteriId, satilanAdet, tarih, alinacakTutar, alinanTutar, odendi)
+            VALUES (?, ?, ?, GETDATE(), ?, ?, ?)
+        """;
+            PreparedStatement ps = conn.prepareStatement(insertSatis);
+            ps.setInt(1, lastik.getId());
+            ps.setInt(2, musteriId);
+            ps.setInt(3, adet);
+            ps.setDouble(4, toplam);
+            ps.setDouble(5, alinan);
+            ps.setBoolean(6, alinan >= toplam);
+            ps.executeUpdate();
+
+            // 🔻 Stok azalt
+            String stokSql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+            PreparedStatement psStok = conn.prepareStatement(stokSql);
+            psStok.setInt(1, adet);
+            psStok.setInt(2, lastik.getId());
+            psStok.executeUpdate();
+
+            conn.commit();
+
+        } catch (Exception e) {
+            hataMesaji("Satış işlemi sırasında hata oluştu:\n" + e.getMessage());
+        }
+    }
+
+
+    // ======================================================
+    //  İADE ET
+    // ======================================================
+    @FXML
+    private void handleIadeEt() { // 🔹 Bu metot artık FXML'de tanımlı!
+        Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
+        if (secilen == null) {
+            showWarning("İade İşlemi", "Lütfen önce bir ürün seçin.");
+            return;
+        }
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("İade Et");
+        dialog.setHeaderText("Seçilen ürün: " + secilen.getMarka() + " " + secilen.getTip());
+        dialog.setContentText("İade edilecek adet miktarını girin:");
+
+        dialog.showAndWait().ifPresent(giris -> {
+            try {
+                int iade = Integer.parseInt(giris);
+                if (iade <= 0) throw new NumberFormatException();
+                if (iade > secilen.getAdet()) {
+                    showWarning("Geçersiz Miktar", "İade miktarı stoktan fazla olamaz!");
+                    return;
+                }
+
+                String sql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+                try (Connection conn = DatabaseConnection.baglan();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, iade);
+                    ps.setInt(2, secilen.getId());
+                    ps.executeUpdate();
+                }
+
+                bilgiMesaji("Stoktan " + iade + " adet iade edildi!");
+                lastikleriYukle();
+
+            } catch (Exception e) {
+                hataMesaji("İade sırasında hata oluştu:\n" + e.getMessage());
+            }
+        });
+    }
+
+    // ======================================================
+    //  GERİ DÖN
+    // ======================================================
     @FXML
     private void handleGeri() {
         try {
@@ -189,203 +365,14 @@ public class LastiklerController {
             Stage stage = (Stage) tableLastikler.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Yılmaz & Ünal Oto Lastik - Ana Panel");
-            stage.centerOnScreen();
         } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Hata");
-            alert.setHeaderText("Panele geri dönülürken hata oluştu!");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+            hataMesaji("Panele geri dönülürken hata oluştu:\n" + e.getMessage());
         }
     }
 
-    @FXML
-    private void handleIadeEt() {
-        Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
-
-        if (secilen == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Uyarı");
-            alert.setHeaderText("İade İşlemi");
-            alert.setContentText("Lütfen önce bir ürün seçin.");
-            alert.showAndWait();
-            return;
-        }
-
-        int mevcutAdet = secilen.adetProperty().get();
-
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("İade Et");
-        dialog.setHeaderText("Seçilen ürün: " + secilen.markaProperty().get() + " " + secilen.tipProperty().get());
-        dialog.setContentText("İade edilecek adet miktarını girin:");
-
-        dialog.showAndWait().ifPresent(giris -> {
-            try {
-                int iadeMiktar = Integer.parseInt(giris);
-                if (iadeMiktar <= 0) {
-                    throw new NumberFormatException();
-                }
-
-                if (iadeMiktar > mevcutAdet) {
-                    Alert warn = new Alert(Alert.AlertType.WARNING);
-                    warn.setTitle("Uyarı");
-                    warn.setHeaderText("Geçersiz Miktar");
-                    warn.setContentText("İade miktarı stoktaki adetten fazla olamaz!");
-                    warn.showAndWait();
-                    return;
-                }
-
-                // Eğer tamamı iade ediliyorsa silme onayı al
-                if (iadeMiktar == mevcutAdet) {
-                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                    confirm.setTitle("Tamamını İade Et");
-                    confirm.setHeaderText("Tüm stok iade edilecek!");
-                    confirm.setContentText("Bu ürün tamamen stoktan kaldırılacak. Devam etmek istiyor musunuz?");
-                    confirm.showAndWait().ifPresent(response -> {
-                        if (response == ButtonType.OK) {
-                            urunuTamamenSil(secilen.idProperty().get());
-                            bilgiMesaji("Tüm ürün başarıyla iade edildi ve stoktan kaldırıldı!");
-                            lastikleriYukle();
-                        }
-                    });
-                } else {
-                    // Stoktan düş
-                    String sql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
-
-                    try (Connection conn = DatabaseConnection.baglan();
-                         PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                        ps.setInt(1, iadeMiktar);
-                        ps.setInt(2, secilen.idProperty().get());
-                        ps.executeUpdate();
-                    }
-
-                    bilgiMesaji("Stoktan " + iadeMiktar + " adet iade edildi!");
-                    lastikleriYukle();
-                }
-
-            } catch (NumberFormatException e) {
-                hataMesaji("Lütfen geçerli bir sayı girin!");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                hataMesaji("İade işlemi sırasında hata oluştu!\n" + ex.getMessage());
-            }
-        });
-    }
-
-    @FXML
-    private void handleSatisYap() {
-        Lastik seciliLastik = tableLastikler.getSelectionModel().getSelectedItem();
-
-        if (seciliLastik == null) {
-            showWarning("Ürün Seçilmedi", "Lütfen satış yapmak için tablodan bir ürün seçin.");
-            return;
-        }
-
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Satış İşlemi");
-        dialog.setHeaderText("Seçilen Ürün: " + seciliLastik.getMarka() + " - " + seciliLastik.getTip());
-
-        ButtonType btnSat = new ButtonType("Satışı Kaydet", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnIptal = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnSat, btnIptal);
-
-        TextField txtAdet = new TextField();
-        txtAdet.setPromptText("Satış adedi girin...");
-
-        TextField txtToplam = new TextField();
-        txtToplam.setPromptText("Toplam fiyat ₺");
-        txtToplam.setEditable(true);
-
-        TextField txtAlinan = new TextField();
-        txtAlinan.setPromptText("Müşteriden alınan ₺ (boş bırakılabilir)");
-
-        Label lblFiyat = new Label("Birim fiyat: " + seciliLastik.getSatisFiyati() + " ₺");
-        Label lblStok = new Label("Stoktaki mevcut adet: " + seciliLastik.getAdet());
-
-        VBox vbox = new VBox(10,
-                lblStok,
-                new Label("Satış Adedi:"), txtAdet,
-                lblFiyat,
-                new Label("Toplam Fiyat (₺):"), txtToplam,
-                new Label("Müşteriden Alınan (₺):"), txtAlinan
-        );
-        vbox.setPadding(new Insets(10));
-        dialog.getDialogPane().setContent(vbox);
-
-        // 🔹 Adet girildikçe otomatik hesaplama
-        txtAdet.textProperty().addListener((obs, eski, yeni) -> {
-            try {
-                int adet = Integer.parseInt(yeni);
-                if (adet > seciliLastik.getAdet()) {
-                    txtAdet.setStyle("-fx-border-color: red;");
-                    txtToplam.clear();
-                } else {
-                    txtAdet.setStyle("");
-                    double toplam = adet * seciliLastik.getSatisFiyati();
-                    txtToplam.setText(String.format("%.2f", toplam));
-                }
-            } catch (NumberFormatException e) {
-                txtToplam.clear();
-                txtAdet.setStyle("");
-            }
-        });
-
-        // 🔹 Sadece sayı ve virgül girişi
-        txtToplam.textProperty().addListener((obs, eski, yeni) -> {
-            if (!yeni.matches("[0-9,]*")) txtToplam.setText(eski);
-        });
-        txtAlinan.textProperty().addListener((obs, eski, yeni) -> {
-            if (!yeni.matches("[0-9,]*")) txtAlinan.setText(eski);
-        });
-
-        // 🔹 Satış butonunun kapanma davranışını kontrol et
-        final Button btnSatButton = (Button) dialog.getDialogPane().lookupButton(btnSat);
-        btnSatButton.addEventFilter(ActionEvent.ACTION, event -> {
-            try {
-                int adet = Integer.parseInt(txtAdet.getText());
-                if (adet <= 0) {
-                    showWarning("Hatalı Adet", "Satış adedi 0 veya negatif olamaz!");
-                    event.consume(); // 🔸 Pencere kapanmasın
-                    return;
-                }
-                if (adet > seciliLastik.getAdet()) {
-                    showWarning("Yetersiz Stok", "Stoktaki adetten fazla satış yapılamaz!");
-                    event.consume(); // 🔸 Pencere kapanmasın
-                    return;
-                }
-
-                double toplam = Double.parseDouble(txtToplam.getText().replace(",", "."));
-                double alinan = 0;
-                if (!txtAlinan.getText().isEmpty())
-                    alinan = Double.parseDouble(txtAlinan.getText().replace(",", "."));
-
-                double kalanBorc = toplam - alinan;
-
-                // 🔹 Satış sonucu penceresi
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Satış Tamamlandı");
-                alert.setHeaderText("Satış başarıyla hesaplandı!");
-                alert.setContentText(
-                        "Ürün: " + seciliLastik.getMarka() + " " + seciliLastik.getEbat() + "\n" +
-                                "Adet: " + adet + "\n" +
-                                "Toplam Tutar: " + String.format("%.2f ₺", toplam) + "\n" +
-                                "Alınan: " + String.format("%.2f ₺", alinan) + "\n" +
-                                "Kalan Borç: " + String.format("%.2f ₺", kalanBorc)
-                );
-                alert.showAndWait();
-
-                // 💾 Burada satış veritabanına kaydedilebilir
-            } catch (NumberFormatException e) {
-                showWarning("Geçersiz Giriş", "Lütfen geçerli sayılar girin.");
-                event.consume(); // 🔸 Pencere kapanmasın
-            }
-        });
-
-        dialog.showAndWait();
-    }
-
+    // ======================================================
+    //  MESAJLAR
+    // ======================================================
     private void showWarning(String baslik, String mesaj) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(baslik);
@@ -394,27 +381,6 @@ public class LastiklerController {
         alert.showAndWait();
     }
 
-
-
-
-    /**
-     * Ürünü tamamen veritabanından siler.
-     */
-    private void urunuTamamenSil(int urunId) {
-        String sql = "DELETE FROM urunler WHERE id = ?";
-        try (Connection conn = DatabaseConnection.baglan();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, urunId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            hataMesaji("Ürün silinirken hata oluştu!\n" + e.getMessage());
-        }
-    }
-
-    /**
-     * Bilgi mesajı gösterir.
-     */
     private void bilgiMesaji(String mesaj) {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
         info.setTitle("Bilgi");
@@ -423,9 +389,6 @@ public class LastiklerController {
         info.showAndWait();
     }
 
-    /**
-     * Hata mesajı gösterir.
-     */
     private void hataMesaji(String mesaj) {
         Alert err = new Alert(Alert.AlertType.ERROR);
         err.setTitle("Hata");
@@ -433,5 +396,4 @@ public class LastiklerController {
         err.setContentText(mesaj);
         err.showAndWait();
     }
-
 }
