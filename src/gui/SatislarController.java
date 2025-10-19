@@ -8,46 +8,57 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import model.Satis;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 /**
- * Satış kayıtlarını listeler ve stokların güncel kalmasını sağlar.
+ * Satış kayıtlarını listeler, ödeme durumlarını gösterir ve güncelleme / iptal işlemlerini yönetir.
  */
 public class SatislarController {
 
     @FXML private TableView<Satis> tableSatislar;
-    @FXML private TableColumn<Satis, Integer> colId;
+
     @FXML private TableColumn<Satis, String> colMarka;
-    @FXML private TableColumn<Satis, String> colTip;
+    @FXML private TableColumn<Satis, String> colModel;
     @FXML private TableColumn<Satis, String> colEbat;
-    @FXML private TableColumn<Satis, Double> colSatisFiyati;
-    @FXML private TableColumn<Satis, Integer> colAdet;
-    @FXML private TableColumn<Satis, String> colTarih;
+    @FXML private TableColumn<Satis, String> colHiz;
+    @FXML private TableColumn<Satis, String> colYuk;
     @FXML private TableColumn<Satis, String> colMusteri;
+    @FXML private TableColumn<Satis, String> colTelefon;
+    @FXML private TableColumn<Satis, Integer> colAdet;
+    @FXML private TableColumn<Satis, Double> colAlinacak;
+    @FXML private TableColumn<Satis, Double> colAlinan;
+    @FXML private TableColumn<Satis, Double> colKalan;
+    @FXML private TableColumn<Satis, String> colTarih;
+    @FXML private TableColumn<Satis, Boolean> colOdendi;
 
     private ObservableList<Satis> satisListesi = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         // 🔹 Tablo sütunlarını model sınıfıyla eşleştir
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colMarka.setCellValueFactory(new PropertyValueFactory<>("marka"));
-        colTip.setCellValueFactory(new PropertyValueFactory<>("tip"));
+        colModel.setCellValueFactory(new PropertyValueFactory<>("model"));
         colEbat.setCellValueFactory(new PropertyValueFactory<>("ebat"));
-        colSatisFiyati.setCellValueFactory(new PropertyValueFactory<>("satisFiyati"));
-        colAdet.setCellValueFactory(new PropertyValueFactory<>("adet"));
+        colHiz.setCellValueFactory(new PropertyValueFactory<>("hizEndeksi"));
+        colYuk.setCellValueFactory(new PropertyValueFactory<>("yukEndeksi"));
+        colMusteri.setCellValueFactory(new PropertyValueFactory<>("musteriAdiSoyadi"));
+        colTelefon.setCellValueFactory(new PropertyValueFactory<>("musteriTelefon"));
+        colAdet.setCellValueFactory(new PropertyValueFactory<>("satilanAdet"));
+        colAlinacak.setCellValueFactory(new PropertyValueFactory<>("alinacakTutar"));
+        colAlinan.setCellValueFactory(new PropertyValueFactory<>("alinanTutar"));
+        colKalan.setCellValueFactory(new PropertyValueFactory<>("kalanTutar"));
         colTarih.setCellValueFactory(new PropertyValueFactory<>("tarih"));
-        colMusteri.setCellValueFactory(new PropertyValueFactory<>("musteri"));
 
-        verileriGetir(); // ilk açılışta listele
+        colOdendi.setCellValueFactory(new PropertyValueFactory<>("odendi"));
+        colOdendi.setCellFactory(tc -> new CheckBoxTableCell<>());
+
+        verileriGetir();
     }
 
     /**
@@ -57,20 +68,30 @@ public class SatislarController {
         satisListesi.clear();
 
         String sql = """
-                SELECT s.id,
-                       m.markaAdi AS marka,
-                       t.tip AS tip,
-                       CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
-                       u.satisFiyati,
-                       s.satilanAdet AS adet,
-                       FORMAT(s.tarih, 'dd.MM.yyyy HH:mm') AS tarih,
-                       CONCAT(mus.adi, ' ', mus.soyadi) AS musteri
+                SELECT\s
+                    s.id,
+                    ma.markaAdi AS marka,
+                    u.model,
+                    CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
+                    hizEndeks AS hizEndeksi,
+                    yukEndeks AS yukEndeksi,
+                    t.tip AS tip,
+                    m.adi + ' ' + m.soyadi AS musteriAdiSoyadi,
+                    m.telefon,
+                    s.satilanAdet,
+                    s.alinacakTutar,
+                    s.alinanTutar,
+                    (s.alinacakTutar - ISNULL(s.alinanTutar, 0)) AS kalan,
+                    FORMAT(s.tarih, 'dd.MM.yyyy HH:mm') AS tarih,
+                    s.odendi
                 FROM satislar s
                 JOIN urunler u ON s.urunId = u.id
-                JOIN markalar m ON u.markaId = m.id
+                JOIN markalar ma ON u.markaId = ma.id
                 JOIN tipler t ON u.tipId = t.id
                 JOIN ebatlar e ON u.ebatId = e.id
-                JOIN musteriler mus ON s.musteriId = mus.id
+                JOIN hizEndeksleri h ON u.hizEndeksId = h.id
+                JOIN yukEndeksleri y ON u.yukEndeksId = y.id
+                JOIN musteriler m ON s.musteriId = m.id
                 ORDER BY s.tarih DESC;
                 """;
 
@@ -80,14 +101,20 @@ public class SatislarController {
 
             while (rs.next()) {
                 satisListesi.add(new Satis(
-                        rs.getInt("id"),
+                        rs.getLong("id"),
                         rs.getString("marka"),
-                        rs.getString("tip"),
+                        rs.getString("model"),
                         rs.getString("ebat"),
-                        rs.getDouble("satisFiyati"),
-                        rs.getInt("adet"),
+                        rs.getString("hizEndeksi"),
+                        rs.getString("yukEndeksi"),
+                        rs.getString("musteriAdiSoyadi"),
+                        rs.getString("telefon"),
+                        rs.getInt("satilanAdet"),
+                        rs.getDouble("alinacakTutar"),
+                        rs.getDouble("alinanTutar"),
+                        rs.getDouble("kalan"),
                         rs.getString("tarih"),
-                        rs.getString("musteri")
+                        rs.getBoolean("odendi")
                 ));
             }
 
@@ -111,58 +138,77 @@ public class SatislarController {
     }
 
     /**
-     * Satış kaydı seçilirse ilgili ürünün stoktan düştüğünü kontrol eder,
-     * stok hâlâ düşmemişse düzeltir.
+     * Satış kaydının tutar veya ödeme bilgisini güncelleme.
      */
     @FXML
-    private void handleStokGuncelle() {
+    private void handleSatisGuncelle() {
         Satis secilen = tableSatislar.getSelectionModel().getSelectedItem();
 
         if (secilen == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Stok Güncelleme");
-            alert.setHeaderText("Ürün Seçilmedi");
-            alert.setContentText("Lütfen stok kontrolü yapılacak bir satış kaydı seçin.");
-            alert.showAndWait();
+            uyari("Satış Güncelleme", "Lütfen güncellenecek bir satış seçin.");
             return;
         }
 
-        try (Connection conn = DatabaseConnection.baglan()) {
-            String kontrolSql = "SELECT adet FROM urunler WHERE id = (SELECT urunId FROM satislar WHERE id = ?)";
-            PreparedStatement psKontrol = conn.prepareStatement(kontrolSql);
-            psKontrol.setInt(1, secilen.getId());
-            ResultSet rs = psKontrol.executeQuery();
+        TextInputDialog dialog = new TextInputDialog(String.valueOf(secilen.getAlinanTutar()));
+        dialog.setTitle("Satış Güncelleme");
+        dialog.setHeaderText("Müşteri: " + secilen.getMusteriAdiSoyadi());
+        dialog.setContentText("Yeni alınan tutarı girin (₺):");
 
-            if (rs.next()) {
-                int mevcutStok = rs.getInt("adet");
-                if (mevcutStok >= secilen.getAdet()) {
-                    // stok düşmemişse düzelt
-                    String guncelleSql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = (SELECT urunId FROM satislar WHERE id = ?)";
-                    PreparedStatement psUpdate = conn.prepareStatement(guncelleSql);
-                    psUpdate.setInt(1, secilen.getAdet());
-                    psUpdate.setInt(2, secilen.getId());
-                    psUpdate.executeUpdate();
+        dialog.showAndWait().ifPresent(deger -> {
+            try {
+                double yeniAlinan = Double.parseDouble(deger);
+                boolean odendi = yeniAlinan >= secilen.getAlinacakTutar();
 
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setTitle("Stok Güncellendi");
-                    info.setHeaderText(null);
-                    info.setContentText("Satış sonrası stok miktarı düzeltildi.");
-                    info.showAndWait();
-                } else {
-                    Alert warn = new Alert(Alert.AlertType.WARNING);
-                    warn.setTitle("Stok Zaten Güncel");
-                    warn.setHeaderText(null);
-                    warn.setContentText("Bu satış zaten stoktan düşülmüş görünüyor.");
-                    warn.showAndWait();
+                try (Connection conn = DatabaseConnection.baglan()) {
+                    String updateSql = "UPDATE satislar SET alinanTutar = ?, odendi = ? WHERE id = ?";
+                    PreparedStatement ps = conn.prepareStatement(updateSql);
+                    ps.setDouble(1, yeniAlinan);
+                    ps.setBoolean(2, odendi);
+                    ps.setLong(3, secilen.getId());
+                    ps.executeUpdate();
                 }
-            }
 
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Hata");
-            alert.setHeaderText("Stok güncelleme hatası!");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+                bilgi("Başarılı", "Satış bilgisi güncellendi!");
+                verileriGetir();
+
+            } catch (NumberFormatException e) {
+                uyari("Geçersiz Giriş", "Lütfen geçerli bir sayı girin.");
+            } catch (SQLException e) {
+                hata("Güncelleme Hatası", e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Seçilen satışı iptal eder (veritabanından siler).
+     */
+    @FXML
+    private void handleSatisIptal() {
+        Satis secilen = tableSatislar.getSelectionModel().getSelectedItem();
+
+        if (secilen == null) {
+            uyari("Satış İptali", "Lütfen iptal edilecek bir satış seçin.");
+            return;
+        }
+
+        Alert onay = new Alert(Alert.AlertType.CONFIRMATION);
+        onay.setTitle("Satış İptali");
+        onay.setHeaderText("Satış silinecek!");
+        onay.setContentText(secilen.getMusteriAdiSoyadi() + " adlı müşterinin satışı iptal edilsin mi?");
+        if (onay.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK)
+            return;
+
+        try (Connection conn = DatabaseConnection.baglan()) {
+            String silSql = "DELETE FROM satislar WHERE id = ?";
+            PreparedStatement ps = conn.prepareStatement(silSql);
+            ps.setLong(1, secilen.getId());
+            ps.executeUpdate();
+
+            bilgi("Satış Silindi", "Satış başarıyla iptal edildi!");
+            verileriGetir();
+
+        } catch (SQLException e) {
+            hata("Silme Hatası", e.getMessage());
         }
     }
 
@@ -182,11 +228,32 @@ public class SatislarController {
             stage.show();
 
         } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Geri Dönüş Hatası");
-            alert.setHeaderText("Ana panele geri dönülürken hata oluştu!");
-            alert.setContentText("Panel.fxml yüklenemedi.\n\nDetay: " + e.getMessage());
-            alert.showAndWait();
+            hata("Geri Dönüş Hatası", "Panel.fxml yüklenemedi!\n" + e.getMessage());
         }
+    }
+
+    // 🔸 Yardımcı metodlar
+    private void bilgi(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
+    }
+
+    private void uyari(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
+    }
+
+    private void hata(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
     }
 }

@@ -1,23 +1,27 @@
 package gui;
 
 import database.DatabaseConnection;
+import database.DatabaseFunctions;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import model.Lastik;
+import model.MusteriLite;
 import org.controlsfx.control.table.TableFilter;
-
 import java.sql.*;
-
+import javafx.beans.value.ChangeListener;
+import java.util.stream.Collectors;
 /**
  * Stoktaki lastikleri gösterir ve stok / satış / iade işlemlerini yönetir.
  */
@@ -147,8 +151,9 @@ public class LastiklerController {
         });
     }
 
+
     // ======================================================
-    //  SATIŞ YAP
+    //  SATIŞ YAP (TOPLU VE KESİN DÜZELTME)
     // ======================================================
     @FXML
     private void handleSatisYap() {
@@ -158,159 +163,52 @@ public class LastiklerController {
             return;
         }
 
+        ObservableList<MusteriLite> musterilerlite = DatabaseFunctions.musterileriGetirLite();
+
+        // 🔹 Haritayı bir kez oluştur (performans için)
+        MusteriLite.initializeMap(musterilerlite);
+
+        if (musterilerlite == null || musterilerlite.isEmpty()) {
+            showWarning("Müşteri Yok", "Veritabanında kayıtlı müşteri bulunamadı. Lütfen önce bir müşteri ekleyin.");
+            return;
+        }
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Satış İşlemi");
         dialog.setHeaderText("Seçilen Ürün: " + seciliLastik.getMarka() + " - " + seciliLastik.getTip());
 
-        ButtonType btnKaydet = new ButtonType("Satışı Kaydet", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnIptal = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnKaydet, btnIptal);
+        ComboBox<MusteriLite> comboMusterilite = new ComboBox<>();
+        comboMusterilite.setEditable(true);
+        comboMusterilite.setPromptText("Müşteri Seç veya Ara...");
+        comboMusterilite.setPrefWidth(320);
 
-        TextField txtMusteri = new TextField();
-        txtMusteri.setPromptText("Müşteri adı soyadı...");
+        FilteredList<MusteriLite> filtreliListe = new FilteredList<>(musterilerlite, p -> true);
+        comboMusterilite.setItems(filtreliListe);
 
-        TextField txtAdet = new TextField();
-        txtAdet.setPromptText("Satış adedi...");
+        // ComboBox'u diyalog penceresine ekle
+        VBox content = new VBox(10, new Label("Müşteri Seç:"), comboMusterilite);
+        dialog.getDialogPane().setContent(content);
 
-        TextField txtAlinan = new TextField();
-        txtAlinan.setPromptText("Alınan tutar ₺ (boş bırakılabilir)");
+        // Butonları ekle
+        ButtonType satBtn = new ButtonType("Sat", ButtonBar.ButtonData.OK_DONE);
+        ButtonType iptalBtn = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(satBtn, iptalBtn);
 
-        Label lblBirim = new Label("Birim fiyat: " + seciliLastik.getSatisFiyati() + " ₺");
-        Label lblStok = new Label("Stokta: " + seciliLastik.getAdet() + " adet");
-        Label lblToplam = new Label("Toplam: 0 ₺");
-
-        VBox vbox = new VBox(10, lblStok,
-                new Label("Müşteri Adı Soyadı:"), txtMusteri,
-                new Label("Satış Adedi:"), txtAdet,
-                lblBirim, lblToplam,
-                new Label("Müşteriden Alınan (₺):"), txtAlinan);
-        vbox.setPadding(new Insets(10));
-        dialog.getDialogPane().setContent(vbox);
-
-        // Toplam hesaplama
-        txtAdet.textProperty().addListener((obs, oldVal, newVal) -> {
-            try {
-                int adet = Integer.parseInt(newVal);
-                if (adet > seciliLastik.getAdet()) {
-                    lblToplam.setText("Yetersiz stok!");
-                    lblToplam.setStyle("-fx-text-fill: red;");
+        // 🔹 Diyalog gösterilir ve kullanıcı bir seçim yaparsa burada döner
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == satBtn) {
+                Object m = comboMusterilite.getSelectionModel().getSelectedItem();
+                if (m != null) {
+                    Object secilenAd = comboMusterilite.getSelectionModel().getSelectedItem();
+                    long musteriId = MusteriLite.getIdFromGorunenAd(secilenAd);
+                    System.out.println("Seçilen Müşteri ID: " + musteriId);
                 } else {
-                    double toplam = adet * seciliLastik.getSatisFiyati();
-                    lblToplam.setText(String.format("Toplam: %.2f ₺", toplam));
-                    lblToplam.setStyle("-fx-text-fill: white;");
-                }
-            } catch (Exception e) {
-                lblToplam.setText("Toplam: 0 ₺");
-            }
-        });
-
-        dialog.setResultConverter(button -> {
-            if (button == btnKaydet) {
-                try {
-                    String musteriAdi = txtMusteri.getText().trim();
-                    int adet = Integer.parseInt(txtAdet.getText().trim());
-                    double alinan = txtAlinan.getText().isEmpty() ? 0 : Double.parseDouble(txtAlinan.getText().replace(",", "."));
-                    double toplam = adet * seciliLastik.getSatisFiyati();
-
-                    if (musteriAdi.isEmpty()) {
-                        showWarning("Eksik Bilgi", "Lütfen müşteri adını girin!");
-                        return null;
-                    }
-                    if (adet <= 0 || adet > seciliLastik.getAdet()) {
-                        showWarning("Hatalı Adet", "Geçerli bir satış adedi girin!");
-                        return null;
-                    }
-
-                    satisKaydet(seciliLastik, musteriAdi, adet, toplam, alinan);
-                    bilgiMesaji("Satış başarıyla kaydedildi!");
-                    lastikleriYukle();
-
-                } catch (Exception e) {
-                    hataMesaji("Satış kaydedilirken hata oluştu:\n" + e.getMessage());
+                    showWarning("Müşteri Seçilmedi", "Lütfen bir müşteri seçin.");
                 }
             }
-            return null;
         });
-
-        dialog.showAndWait();
     }
 
-    /**
-     * Satışı veritabanına kaydeder (stok düşümü SQL tarafında yapılır).
-     */
-    private void satisKaydet(Lastik lastik, String musteriAdi, int adet, double toplam, double alinan) {
-        try (Connection conn = DatabaseConnection.baglan()) {
-            conn.setAutoCommit(false);
-            int musteriId;
-
-            // 🔹 Ad soyad güvenli şekilde ayır
-            String temizAdSoyad = musteriAdi == null ? "" : musteriAdi.trim();
-            if (temizAdSoyad.isEmpty()) {
-                showWarning("Eksik Bilgi", "Lütfen müşteri adını girin!");
-                return;
-            }
-
-            String[] parcalar = temizAdSoyad.split("\\s+", 2);
-            String ad = parcalar[0].trim();
-            String soyad = (parcalar.length > 1) ? parcalar[1].trim() : "Bilinmiyor";
-
-            // 🔹 Var mı kontrol et (case-insensitive)
-            String checkSql = """
-            SELECT id FROM musteriler
-            WHERE LOWER(LTRIM(RTRIM(adi))) = LOWER(?)
-              AND LOWER(LTRIM(RTRIM(soyadi))) = LOWER(?)
-        """;
-            PreparedStatement psCheck = conn.prepareStatement(checkSql);
-            psCheck.setString(1, ad);
-            psCheck.setString(2, soyad);
-            ResultSet rs = psCheck.executeQuery();
-
-            if (rs.next()) {
-                // ✅ Aynı müşteri varsa mevcut ID alınır
-                musteriId = rs.getInt("id");
-            } else {
-                // ✅ Yeni müşteri eklenir
-                String insertMusteri = """
-                INSERT INTO musteriler (adi, soyadi, kayitTarihi, borc)
-                VALUES (?, ?, GETDATE(), 0)
-            """;
-                PreparedStatement psInsert = conn.prepareStatement(insertMusteri, Statement.RETURN_GENERATED_KEYS);
-                psInsert.setString(1, ad);
-                psInsert.setString(2, soyad);
-                psInsert.executeUpdate();
-
-                ResultSet gen = psInsert.getGeneratedKeys();
-                gen.next();
-                musteriId = gen.getInt(1);
-            }
-
-            // 🔹 Satış kaydı
-            String insertSatis = """
-            INSERT INTO satislar (urunId, musteriId, satilanAdet, tarih, alinacakTutar, alinanTutar, odendi)
-            VALUES (?, ?, ?, GETDATE(), ?, ?, ?)
-        """;
-            PreparedStatement ps = conn.prepareStatement(insertSatis);
-            ps.setInt(1, lastik.getId());
-            ps.setInt(2, musteriId);
-            ps.setInt(3, adet);
-            ps.setDouble(4, toplam);
-            ps.setDouble(5, alinan);
-            ps.setBoolean(6, alinan >= toplam);
-            ps.executeUpdate();
-
-            // 🔻 Stok azalt
-            String stokSql = "UPDATE urunler SET adet = adet - ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
-            PreparedStatement psStok = conn.prepareStatement(stokSql);
-            psStok.setInt(1, adet);
-            psStok.setInt(2, lastik.getId());
-            psStok.executeUpdate();
-
-            conn.commit();
-
-        } catch (Exception e) {
-            hataMesaji("Satış işlemi sırasında hata oluştu:\n" + e.getMessage());
-        }
-    }
 
 
     // ======================================================

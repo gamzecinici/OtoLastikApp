@@ -1,5 +1,6 @@
 package gui;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,6 +12,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import model.Musteri;
 import database.DatabaseFunctions;
+import org.controlsfx.control.table.TableFilter;
 
 public class MusterilerController {
 
@@ -43,6 +45,7 @@ public class MusterilerController {
 
         // 🔹 TableView’e veriyi ata
         tableMusteriler.setItems(musteriListesi);
+        Platform.runLater(() -> TableFilter.forTableView(tableMusteriler).apply());
     }
 
     @FXML
@@ -159,6 +162,7 @@ public class MusterilerController {
         TextField txtEmail = new TextField(m.getEmail());
         TextField txtAdres = new TextField(m.getAdres());
         TextField txtBorc = new TextField(String.valueOf(m.getBorc()));
+        txtBorc.setEditable(false);
 
         txtAdi.setPromptText("Adı");
         txtSoyadi.setPromptText("Soyadı");

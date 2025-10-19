@@ -25,68 +25,105 @@
 
             <!-- Satış Tablosu -->
             <TableView fx:id="tableSatislar"
-                       prefHeight="420" prefWidth="840"
+                       prefHeight="420" prefWidth="850"
                        style="-fx-background-color: #2b3b4e;
-                              -fx-control-inner-background: #2b3b4e;
-                              -fx-border-color: #475569;
-                              -fx-border-radius: 8;
-                              -fx-background-radius: 8;
-                              -fx-table-cell-border-color: #475569;
-                              -fx-table-header-border-color: #475569;
-                              -fx-selection-bar: #3b82f6;
-                              -fx-selection-bar-non-focused: #334155;">
+                  -fx-control-inner-background: #2b3b4e;
+                  -fx-border-color: #475569;
+                  -fx-border-radius: 8;
+                  -fx-background-radius: 8;
+                  -fx-table-cell-border-color: #475569;
+                  -fx-table-header-border-color: #475569;
+                  -fx-selection-bar: #3b82f6;
+                  -fx-selection-bar-non-focused: #334155;">
 
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-                    <TableColumn fx:id="colMarka" text="Marka" prefWidth="120"/>
-                    <TableColumn fx:id="colTip" text="Tip" prefWidth="100"/>
-                    <TableColumn fx:id="colEbat" text="Ebat" prefWidth="120"/>
-                    <TableColumn fx:id="colSatisFiyati" text="Satış ₺" prefWidth="100"/>
-                    <TableColumn fx:id="colAdet" text="Adet" prefWidth="80"/>
+                    <TableColumn fx:id="colMarka" text="Marka" prefWidth="100"/>
+                    <TableColumn fx:id="colModel" text="Model" prefWidth="100"/>
+                    <TableColumn fx:id="colEbat" text="Ebat" prefWidth="100"/>
+                    <TableColumn fx:id="colHiz" text="Hız Endeksi" prefWidth="90"/>
+                    <TableColumn fx:id="colYuk" text="Yük Endeksi" prefWidth="90"/>
+                    <TableColumn fx:id="colMusteri" text="Müşteri" prefWidth="140"/>
+                    <TableColumn fx:id="colTelefon" text="Telefon" prefWidth="100"/>
+                    <TableColumn fx:id="colAdet" text="Adet" prefWidth="60"/>
+                    <TableColumn fx:id="colAlinacak" text="Alınacak ₺" prefWidth="90"/>
+                    <TableColumn fx:id="colAlinan" text="Alınan ₺" prefWidth="90"/>
+                    <TableColumn fx:id="colKalan" text="Kalan ₺" prefWidth="80"/>
                     <TableColumn fx:id="colTarih" text="Tarih" prefWidth="130"/>
-                    <TableColumn fx:id="colMusteri" text="Müşteri" prefWidth="130"/>
+                    <TableColumn fx:id="colOdendi" text="Ödendi" prefWidth="70"/>
                 </columns>
 
                 <columnResizePolicy>
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                 </columnResizePolicy>
-
-                <style>
-                    .column-header-background {
-                    -fx-background-color: #1f2c3a;
-                    }
-                    .column-header {
-                    -fx-text-fill: #f1f5f9;
-                    -fx-font-weight: bold;
-                    -fx-font-size: 14px;
-                    -fx-alignment: CENTER;
-                    }
-                </style>
             </TableView>
 
-            <!-- Alt Butonlar -->
-            <HBox spacing="12" alignment="CENTER_RIGHT">
-                <Button text="🔄 Yenile"
-                        onAction="#handleYenile"
-                        style="-fx-background-color: linear-gradient(to right, #0ea5e9, #3b82f6);
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
-                               -fx-background-radius: 10;
-                               -fx-pref-height: 36;
-                               -fx-pref-width: 120;
-                               -fx-font-size: 13px;
-                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
-                <Button text="↩ Geri Dön"
-                        onAction="#handleGeri"
-                        style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
-                               -fx-background-radius: 10;
-                               -fx-pref-height: 36;
-                               -fx-pref-width: 120;
-                               -fx-font-size: 13px;
-                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+            <!-- Alt Butonlar -->
+            <HBox spacing="100" alignment="CENTER"
+                  AnchorPane.bottomAnchor="25">
+
+                <!-- Sol Grup -->
+                <HBox spacing="14" alignment="CENTER_LEFT">
+                    <children>
+                        <!-- Satışı Güncelle -->
+                        <Button text="✏️ Satışı Güncelle"
+                                onAction="#handleSatisGuncelle"
+                                style="-fx-background-color: linear-gradient(to right, #22c55e, #16a34a);
+                                       -fx-text-fill: white;
+                                       -fx-font-size: 14px;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 10;
+                                       -fx-pref-height: 36;
+                                       -fx-pref-width: 150;
+                                       -fx-cursor: hand;
+                                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);" />
+
+                        <!-- Satışı İptal Et -->
+                        <Button text="🗑️ Satışı İptal Et"
+                                onAction="#handleSatisIptal"
+                                style="-fx-background-color: linear-gradient(to right, #fb923c, #f97316);
+                                       -fx-text-fill: white;
+                                       -fx-font-size: 14px;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 10;
+                                       -fx-pref-height: 36;
+                                       -fx-pref-width: 150;
+                                       -fx-cursor: hand;
+                                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);" />
+                    </children>
+                </HBox>
+
+                <!-- Sağ Grup -->
+                <HBox spacing="14" alignment="CENTER_RIGHT">
+                    <children>
+                        <!-- Yenile -->
+                        <Button text="🔄 Yenile"
+                                onAction="#handleYenile"
+                                style="-fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed);
+                                       -fx-text-fill: white;
+                                       -fx-font-size: 14px;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 10;
+                                       -fx-pref-height: 36;
+                                       -fx-pref-width: 130;
+                                       -fx-cursor: hand;
+                                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);" />
+
+                        <!-- Geri Dön -->
+                        <Button text="↩ Geri Dön"
+                                onAction="#handleGeri"
+                                style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
+                                       -fx-text-fill: white;
+                                       -fx-font-size: 14px;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 10;
+                                       -fx-pref-height: 36;
+                                       -fx-pref-width: 130;
+                                       -fx-cursor: hand;
+                                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);" />
+                    </children>
+                </HBox>
+
             </HBox>
 
         </VBox>

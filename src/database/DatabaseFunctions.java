@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import model.KeyValue;
 import model.Musteri;
+import model.MusteriLite;
 
 import java.sql.*;
 
@@ -202,6 +203,32 @@ public class DatabaseFunctions {
 
         return liste;
     }
+
+    public static ObservableList<MusteriLite> musterileriGetirLite() {
+        ObservableList<MusteriLite> musteriler = FXCollections.observableArrayList();
+        String sql = "SELECT id, adi, soyadi, telefon, borc FROM musteriler ORDER BY adi ASC";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                musteriler.add(new MusteriLite(
+                        rs.getLong("id"),
+                        rs.getString("adi"),
+                        rs.getString("soyadi"),
+                        rs.getString("telefon"),
+                        rs.getDouble("borc")
+                ));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Müşterileri getirirken hata: " + e.getMessage());
+        }
+
+        return musteriler;
+    }
+
 
     // -------------------------------------------------------------------
     // 🔹 MÜŞTERİ EKLEME METODU
