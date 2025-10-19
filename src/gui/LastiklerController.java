@@ -8,20 +8,16 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import model.Lastik;
 import model.MusteriLite;
 import org.controlsfx.control.table.TableFilter;
 import java.sql.*;
-import javafx.beans.value.ChangeListener;
-import java.util.stream.Collectors;
+
 /**
  * Stoktaki lastikleri gösterir ve stok / satış / iade işlemlerini yönetir.
  */
@@ -185,8 +181,47 @@ public class LastiklerController {
         FilteredList<MusteriLite> filtreliListe = new FilteredList<>(musterilerlite, p -> true);
         comboMusterilite.setItems(filtreliListe);
 
-        // ComboBox'u diyalog penceresine ekle
-        VBox content = new VBox(10, new Label("Müşteri Seç:"), comboMusterilite);
+        // 🔹 Satılacak adet alanı
+        TextField txtAdet = new TextField();
+        txtAdet.setPromptText("Satılacak adet");
+        txtAdet.setPrefWidth(150);
+
+        // 🔹 Birim fiyat alanı
+        TextField txtBirimFiyat = new TextField();
+        double birimFiyat = seciliLastik.getSatisFiyati();
+        txtBirimFiyat.setText(String.format("%.2f", birimFiyat));
+        txtBirimFiyat.setPrefWidth(150);
+        txtBirimFiyat.setEditable(false); // elle değiştirilemez
+
+        // 🔹 Toplam tutar alanı (otomatik hesaplanır)
+        TextField txtToplam = new TextField();
+        txtToplam.setPromptText("Toplam Tutar (₺)");
+        txtToplam.setPrefWidth(150);
+
+        TextField txtAlinan = new TextField();
+        txtAlinan.setPromptText("Alinan Tutar (₺)");
+        txtAlinan.setPrefWidth(150);
+
+        // 🔹 Sadece adet değiştiğinde otomatik toplam hesaplama
+        txtAdet.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                int adet = Integer.parseInt(newVal);
+                double toplam = adet * birimFiyat;
+                txtToplam.setText(String.format("%.2f", toplam));
+            } catch (NumberFormatException e) {
+                txtToplam.clear(); // Geçersiz sayı girilirse temizle
+            }
+        });
+
+        // 🔹 Formu bir araya getir
+        VBox content = new VBox(10);
+        content.getChildren().addAll(
+                new Label("Müşteri Seç:"), comboMusterilite,
+                new Label("Satılacak Adet:"), txtAdet,
+                new Label("Birim Fiyat:"), txtBirimFiyat,
+                new Label("Toplam Tutar:"), txtToplam,
+                new Label("Alınan Tutar:"), txtAlinan
+        );
         dialog.getDialogPane().setContent(content);
 
         // Butonları ekle
@@ -201,15 +236,60 @@ public class LastiklerController {
                 if (m != null) {
                     Object secilenAd = comboMusterilite.getSelectionModel().getSelectedItem();
                     long musteriId = MusteriLite.getIdFromGorunenAd(secilenAd);
-                    System.out.println("Seçilen Müşteri ID: " + musteriId);
+                    long urunId = seciliLastik.getId();
+
+                    try {
+                        // 🔹 Boş veya hatalı girişleri önle
+                        String adetStr = txtAdet.getText().trim();
+                        String toplamStr = txtToplam.getText().trim().replace(",", ".");
+                        String alinanStr = txtAlinan.getText().trim().replace(",", ".");
+
+                        // 🔹 Boş olanları 0 yap
+                        if (adetStr.isEmpty()) adetStr = "0";
+                        if (toplamStr.isEmpty()) toplamStr = "0";
+                        if (alinanStr.isEmpty()) alinanStr = "0";
+
+                        // 🔹 Tür dönüşümleri
+                        int adet = Integer.parseInt(adetStr);
+                        double toplamTutar = Double.parseDouble(toplamStr);
+                        double alinanTutar = Double.parseDouble(alinanStr);
+
+                        // 🔹 Kalan tutar
+                        double kalan = toplamTutar - alinanTutar;
+
+                        boolean odendi = false;
+
+                        if(kalan == 0){
+                            odendi = true;
+                        }
+
+                        // 🔹 Konsola yaz
+                        System.out.println("Seçilen Lastik ID  : " + urunId);
+                        System.out.println("Seçilen Müşteri ID : " + musteriId);
+                        System.out.println("Adet          : " + adet);
+                        System.out.println("Toplam Tutar  : " + String.format("%.2f", toplamTutar) + " ₺");
+                        System.out.println("Alınan Tutar  : " + String.format("%.2f", alinanTutar) + " ₺");
+                        System.out.println("Kalan         : " + String.format("%.2f", kalan) + " ₺");
+                        System.out.println("Ödendi        : " + odendi);
+
+                        if(adet > seciliLastik.getAdet()){
+                            showWarning("Stok Aşımı", "Stokta Yeterli Ürün Yok.\nMevcut Stok: " + seciliLastik.getAdet());
+                            return;
+                        }
+
+                        boolean satisEklendi = DatabaseFunctions.satisEkle(urunId, musteriId, adet, toplamTutar, alinanTutar, odendi);
+                        bilgiMesaji("Satış Başarıyla Yapıldı.");
+                        lastikleriYukle();
+
+                    } catch (Exception e) {
+                        System.out.println("⚠️ Lütfen sayısal alanlara sadece sayı girin!");
+                    }
                 } else {
                     showWarning("Müşteri Seçilmedi", "Lütfen bir müşteri seçin.");
                 }
             }
         });
     }
-
-
 
     // ======================================================
     //  İADE ET

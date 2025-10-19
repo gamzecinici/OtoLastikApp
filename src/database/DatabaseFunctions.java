@@ -308,4 +308,34 @@ public class DatabaseFunctions {
         }
     }
 
+
+    // -------------------------------------------------------------------
+    // 🔹 SATIŞ EKLEME METODU
+    // -------------------------------------------------------------------
+    public static boolean satisEkle(long urunId, long musteriId, int satilanAdet,
+                                    double alinacakTutar, double alinanTutar, boolean odendi) {
+        String sql = """
+        INSERT INTO satislar (urunId, musteriId, satilanAdet, alinacakTutar, alinanTutar, odendi)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, urunId);
+            ps.setLong(2, musteriId);
+            ps.setInt(3, satilanAdet);
+            ps.setBigDecimal(4, new java.math.BigDecimal(alinacakTutar).setScale(2, java.math.RoundingMode.HALF_UP));
+            ps.setBigDecimal(5, new java.math.BigDecimal(alinanTutar).setScale(2, java.math.RoundingMode.HALF_UP));
+            ps.setBoolean(6, odendi);
+
+            int etkilenenSatir = ps.executeUpdate();
+            return etkilenenSatir > 0; // işlem başarılıysa true döner
+
+        } catch (SQLException e) {
+            System.err.println("❌ Satış ekleme hatası: " + e.getMessage());
+            return false;
+        }
+    }
+
 }
