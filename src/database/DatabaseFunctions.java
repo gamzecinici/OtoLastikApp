@@ -338,4 +338,30 @@ public class DatabaseFunctions {
         }
     }
 
+    /**
+     * Satış güncelleme metodu — alınan, kalan ve ödendi durumunu günceller.
+     */
+    public static boolean satisGuncelle(long satisId, double yeniAlinan, double yeniKalan, boolean odendiMi) {
+        String sql = "UPDATE satislar SET alinanTutar = ?, odendi = ?, WHERE id = ?";
+        // Eğer kalan tutar ayrı sütunda varsa:
+        // String sql = "UPDATE satislar SET alinanTutar = ?, kalanTutar = ?, odendi = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.baglan();
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE satislar SET alinanTutar = ?, odendi = ? WHERE id = ?")) {
+
+            ps.setDouble(1, yeniAlinan);
+            ps.setBoolean(2, odendiMi);
+            ps.setLong(3, satisId);
+
+            int etkilenen = ps.executeUpdate();
+            return etkilenen > 0;
+
+        } catch (SQLException e) {
+            System.err.println("❌ Satış güncellenirken hata: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 }

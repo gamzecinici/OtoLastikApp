@@ -55,10 +55,48 @@ public class SatislarController {
         colKalan.setCellValueFactory(new PropertyValueFactory<>("kalanTutar"));
         colTarih.setCellValueFactory(new PropertyValueFactory<>("tarih"));
 
-        colOdendi.setCellValueFactory(new PropertyValueFactory<>("odendi"));
-        colOdendi.setCellFactory(tc -> new CheckBoxTableCell<>());
-
         verileriGetir();
+
+        colOdendi.setCellValueFactory(new PropertyValueFactory<>("odendi"));
+        colOdendi.setCellFactory(column -> new TableCell<>() {
+            private final CheckBox checkBox = new CheckBox();
+
+            {
+                checkBox.setDisable(true); // kullanıcı değiştiremeyecek
+                setAlignment(javafx.geometry.Pos.CENTER); // ✅ sütun ortalama
+            }
+
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+
+                checkBox.setSelected(item);
+
+                if (item) {
+                    checkBox.setStyle(
+                            "-fx-mark-color: #22c55e;" +   // yeşil tik
+                                    "-fx-border-color: #22c55e;" +
+                                    "-fx-border-radius: 3;" +
+                                    "-fx-background-radius: 3;" +
+                                    "-fx-opacity: 1;"
+                    );
+                } else {
+                    checkBox.setStyle(
+                            "-fx-mark-color: transparent;" +
+                                    "-fx-border-color: gray;" +
+                                    "-fx-opacity: 0.8;"
+                    );
+                }
+
+                setGraphic(checkBox);
+                setText(null);
+            }
+        });
     }
 
     /**
@@ -149,26 +187,51 @@ public class SatislarController {
             return;
         }
 
-        TextInputDialog dialog = new TextInputDialog(String.valueOf(secilen.getAlinanTutar()));
+        double mevcutAlinan = secilen.getAlinanTutar();
+        double alinacak = secilen.getAlinacakTutar();
+        double kalan = alinacak - mevcutAlinan;
+
+        TextInputDialog dialog = new TextInputDialog("");
         dialog.setTitle("Satış Güncelleme");
-        dialog.setHeaderText("Müşteri: " + secilen.getMusteriAdiSoyadi());
+        dialog.setHeaderText(
+                "Müşteri: " + secilen.getMusteriAdiSoyadi() + "\n" +
+                        "Önceden alınan tutar: " + mevcutAlinan + " ₺\n" +
+                        "Toplam tutar: " + alinacak + " ₺\n" +
+                        "Kalan borç: " + kalan + " ₺"
+        );
         dialog.setContentText("Yeni alınan tutarı girin (₺):");
 
         dialog.showAndWait().ifPresent(deger -> {
             try {
                 double yeniAlinan = Double.parseDouble(deger);
-                boolean odendi = yeniAlinan >= secilen.getAlinacakTutar();
+                double toplamAlinan = mevcutAlinan + yeniAlinan;
+                double yeniKalan = alinacak - toplamAlinan;
+
+                boolean odendi = toplamAlinan >= alinacak; // ✅ otomatik ödendi kontrolü
 
                 try (Connection conn = DatabaseConnection.baglan()) {
-                    String updateSql = "UPDATE satislar SET alinanTutar = ?, odendi = ? WHERE id = ?";
+                    String updateSql = """
+                    UPDATE satislar
+                    SET alinanTutar = ?, odendi = ?
+                    WHERE id = ?
+                    """;
                     PreparedStatement ps = conn.prepareStatement(updateSql);
-                    ps.setDouble(1, yeniAlinan);
+                    ps.setDouble(1, toplamAlinan);
                     ps.setBoolean(2, odendi);
                     ps.setLong(3, secilen.getId());
                     ps.executeUpdate();
                 }
 
-                bilgi("Başarılı", "Satış bilgisi güncellendi!");
+                if (odendi) {
+                    bilgi("Ödeme Tamamlandı 🎉",
+                            "Bu satış tamamen ödendi.\nToplam alınan: " + toplamAlinan + " ₺");
+                } else {
+                    bilgi("Başarılı", String.format(
+                            "Satış güncellendi!\nYeni alınan: %.2f ₺\nToplam alınan: %.2f ₺\nKalan: %.2f ₺",
+                            yeniAlinan, toplamAlinan, Math.max(yeniKalan, 0)
+                    ));
+                }
+
                 verileriGetir();
 
             } catch (NumberFormatException e) {
@@ -178,6 +241,7 @@ public class SatislarController {
             }
         });
     }
+
 
     /**
      * Seçilen satışı iptal eder (veritabanından siler).

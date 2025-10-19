@@ -8,86 +8,111 @@
 <AnchorPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="gui.MusterilerController"
-            prefWidth="1000" prefHeight="700"
-            style="-fx-background-color: linear-gradient(to bottom right, #0e1621, #1a2634);">
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b);">
 
     <children>
+        <VBox spacing="15" alignment="TOP_CENTER"
+              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="20"
+              AnchorPane.rightAnchor="20" AnchorPane.bottomAnchor="20"
+              style="-fx-background-color: rgba(255,255,255,0.04);
+                     -fx-background-radius: 16;
+                     -fx-padding: 24;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 15, 0.2, 0, 4);">
 
-        <!-- Üst Başlık -->
-        <Label text="Müşteri Listesi"
-               AnchorPane.topAnchor="25"
-               AnchorPane.leftAnchor="40"
-               style="-fx-text-fill: white;"
-        >
-            <font>
-                <Font name="Segoe UI Bold" size="26"/>
-            </font>
-        </Label>
+            <!-- 🏷 Başlık -->
+            <Label text="👥 MÜŞTERİ LİSTESİ"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #f1f5f9;"/>
 
-        <!-- Tablo -->
-        <TableView fx:id="tableMusteriler"
-                   AnchorPane.topAnchor="80"
-                   AnchorPane.leftAnchor="40"
-                   AnchorPane.rightAnchor="40"
-                   AnchorPane.bottomAnchor="120"
-                   style="-fx-background-radius: 10;
-                          -fx-background-color: rgba(255,255,255,0.08);">
+            <!-- 🧾 Tablo -->
+            <TableView fx:id="tableMusteriler"
+                       prefHeight="400" prefWidth="820"
+                       style="-fx-background-color: #2b3b4e;
+                              -fx-control-inner-background: #2b3b4e;
+                              -fx-border-color: #475569;
+                              -fx-border-radius: 8;
+                              -fx-background-radius: 8;
+                              -fx-table-cell-border-color: #475569;
+                              -fx-table-header-border-color: #475569;
+                              -fx-selection-bar: #3b82f6;
+                              -fx-selection-bar-non-focused: #334155;">
 
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-                <TableColumn fx:id="colAdi" text="Adı" prefWidth="120"/>
-                <TableColumn fx:id="colSoyadi" text="Soyadı" prefWidth="120"/>
-                <TableColumn fx:id="colTelefon" text="Telefon" prefWidth="130"/>
-                <TableColumn fx:id="colEmail" text="E-posta" prefWidth="150"/>
-                <TableColumn fx:id="colAdres" text="Adres" prefWidth="200"/>
-                <TableColumn fx:id="colKayitTarihi" text="Kayıt Tarihi" prefWidth="130"/>
-                <TableColumn fx:id="colBorc" text="Borç" prefWidth="100"/>
-            </columns>
-        </TableView>
+                <columns>
+                    <!-- ID KALDIRILDI -->
+                    <TableColumn fx:id="colAdi" text="Adı" prefWidth="110"/>
+                    <TableColumn fx:id="colSoyadi" text="Soyadı" prefWidth="110"/>
+                    <TableColumn fx:id="colTelefon" text="Telefon" prefWidth="150"/>
+                    <TableColumn fx:id="colEmail" text="E-posta" prefWidth="180"/>
+                    <TableColumn fx:id="colAdres" text="Adres" prefWidth="180"/>
+                    <TableColumn fx:id="colKayitTarihi" text="Kayıt Tarihi" prefWidth="150"/>
+                    <TableColumn fx:id="colBorc" text="Borç ₺" prefWidth="90"/>
+                </columns>
 
-        <!-- Alt Butonlar -->
-        <HBox spacing="20" alignment="CENTER"
-              AnchorPane.bottomAnchor="40"
-              AnchorPane.leftAnchor="40"
-              AnchorPane.rightAnchor="40">
-            <Button fx:id="btnEkle"
-                    text="Müşteri Ekle"
-                    onAction="#handleMusteriEkle"
-                    style="-fx-background-color: #22c55e;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-background-radius: 8;
-                           -fx-padding: 10 20;"/>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
 
-            <Button fx:id="btnGuncelle"
-                    text="Müşteriyi Güncelle"
-                    onAction="#handleMusteriGuncelle"
-                    style="-fx-background-color: #3b82f6;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-background-radius: 8;
-                           -fx-padding: 10 20;"/>
+                <style>
+                    .column-header-background {
+                    -fx-background-color: #1f2c3a;
+                    }
+                    .column-header {
+                    -fx-text-fill: #f1f5f9;
+                    -fx-font-weight: bold;
+                    -fx-font-size: 14px;
+                    -fx-alignment: CENTER;
+                    }
+                </style>
+            </TableView>
 
-            <Button fx:id="btnSil"
-                    text="Müşteriyi Kaldır"
-                    onAction="#handleMusteriSil"
-                    style="-fx-background-color: #ef4444;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-background-radius: 8;
-                           -fx-padding: 10 20;"/>
+            <!-- 🔘 Alt Butonlar -->
+            <HBox alignment="CENTER_RIGHT" spacing="12">
 
-            <Region HBox.hgrow="ALWAYS"/>
+                <Button text="+ Müşteri Ekle"
+                        onAction="#handleMusteriEkle"
+                        style="-fx-background-color: linear-gradient(to right, #16a34a, #22c55e);
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-pref-height: 36;
+                               -fx-pref-width: 140;
+                               -fx-font-size: 13px;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
-            <Button fx:id="btnGeri"
-                    text="Geri"
-                    onAction="#handleGeriDon"
-                    style="-fx-background-color: #64748b;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-background-radius: 8;
-                           -fx-padding: 10 20;"/>
-        </HBox>
+                <Button text="✏ Müşteri Güncelle"
+                        onAction="#handleMusteriGuncelle"
+                        style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6);
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-pref-height: 36;
+                               -fx-pref-width: 150;
+                               -fx-font-size: 13px;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
 
+                <Button text="🗑 Müşteri Kaldır"
+                        onAction="#handleMusteriSil"
+                        style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-pref-height: 36;
+                               -fx-pref-width: 140;
+                               -fx-font-size: 13px;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+
+                <Button text="↩ Geri Dön"
+                        onAction="#handleGeriDon"
+                        style="-fx-background-color: linear-gradient(to right, #ca8a04, #eab308);
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-pref-height: 36;
+                               -fx-pref-width: 130;
+                               -fx-font-size: 13px;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
+            </HBox>
+
+        </VBox>
     </children>
 </AnchorPane>

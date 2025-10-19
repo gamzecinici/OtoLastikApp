@@ -17,7 +17,6 @@ import org.controlsfx.control.table.TableFilter;
 public class MusterilerController {
 
     @FXML private TableView<Musteri> tableMusteriler;
-    @FXML private TableColumn<Musteri, Long> colId;
     @FXML private TableColumn<Musteri, String> colAdi, colSoyadi, colTelefon, colEmail, colAdres;
     @FXML private TableColumn<Musteri, String> colKayitTarihi;
     @FXML private TableColumn<Musteri, Double> colBorc;
@@ -29,12 +28,12 @@ public class MusterilerController {
         musteriListesiniYukle();
     }
 
+    /**
+     * Veritabanından müşterileri çeker ve tabloya yükler.
+     */
     private void musteriListesiniYukle() {
-        // 🔹 Veritabanından çek
         ObservableList<Musteri> musteriListesi = DatabaseFunctions.musterileriGetir();
 
-        // 🔹 Sütunları bağla (ilk çalışmada)
-        colId.setCellValueFactory(data -> data.getValue().idProperty().asObject());
         colAdi.setCellValueFactory(data -> data.getValue().adiProperty());
         colSoyadi.setCellValueFactory(data -> data.getValue().soyadiProperty());
         colTelefon.setCellValueFactory(data -> data.getValue().telefonProperty());
@@ -43,14 +42,30 @@ public class MusterilerController {
         colKayitTarihi.setCellValueFactory(data -> data.getValue().kayitTarihiProperty());
         colBorc.setCellValueFactory(data -> data.getValue().borcProperty().asObject());
 
-        // 🔹 TableView’e veriyi ata
+        // 🔹 Borç sütununu renklendir (isteğe bağlı, şık görünüm)
+        colBorc.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(String.format("%.2f ₺", item));
+                    if (item > 0)
+                        setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;"); // kırmızı: borcu var
+                    else
+                        setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;"); // yeşil: borcu yok
+                }
+            }
+        });
+
         tableMusteriler.setItems(musteriListesi);
         Platform.runLater(() -> TableFilter.forTableView(tableMusteriler).apply());
     }
 
     @FXML
     private void handleMusteriEkle() {
-        // 🔹 Popup oluştur
         Dialog<Musteri> dialog = new Dialog<>();
         dialog.setTitle("Yeni Müşteri Ekle");
         dialog.setHeaderText("Yeni müşteri bilgilerini giriniz");
@@ -60,7 +75,6 @@ public class MusterilerController {
         ButtonType iptalButton = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(ekleButton, iptalButton);
 
-        // 🔹 Boş form alanları
         TextField txtAdi = new TextField();
         TextField txtSoyadi = new TextField();
         TextField txtTelefon = new TextField();
@@ -73,7 +87,6 @@ public class MusterilerController {
         txtEmail.setPromptText("E-posta");
         txtAdres.setPromptText("Adres");
 
-        // 🔹 Layout
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -87,7 +100,6 @@ public class MusterilerController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // 🔹 Sonuç (Kaydet basınca)
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == ekleButton) {
                 if (txtAdi.getText().isEmpty() || txtSoyadi.getText().isEmpty()) {
@@ -98,54 +110,41 @@ public class MusterilerController {
                     return null;
                 }
 
-                // otomatik tarih
                 String bugun = java.time.LocalDate.now().toString();
 
                 return new Musteri(
-                        0, // id veritabanında otomatik artıyor
+                        0,
                         txtAdi.getText().trim(),
                         txtSoyadi.getText().trim(),
                         txtTelefon.getText().trim(),
                         txtEmail.getText().trim(),
                         txtAdres.getText().trim(),
                         bugun,
-                        0.0 // borç = 0
+                        0.0
                 );
             }
             return null;
         });
 
-        // 🔹 Veritabanına ekle
         dialog.showAndWait().ifPresent(yeni -> {
             try {
                 boolean basarili = DatabaseFunctions.musteriEkle(yeni);
 
                 if (basarili) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Başarılı");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Yeni müşteri başarıyla eklendi!");
-                    alert.showAndWait();
-                    musteriListesiniYukle(); // tabloyu yenile
+                    bilgi("Başarılı", "Yeni müşteri başarıyla eklendi!");
+                    musteriListesiniYukle();
                 }
-
             } catch (RuntimeException ex) {
-                // 🔹 Burada özel hata mesajını göstereceğiz
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Müşteri Eklenemedi");
-                alert.setHeaderText("Kayıt işlemi başarısız!");
-                alert.setContentText(ex.getMessage());
-                alert.showAndWait();
+                hata("Müşteri Eklenemedi", ex.getMessage());
             }
         });
     }
 
     @FXML
     private void handleMusteriGuncelle() {
-        Musteri m = getSeciliMusteri(); // Seçili müşteri kontrolü
+        Musteri m = getSeciliMusteri();
         if (m == null) return;
 
-        // 🔹 Popup oluştur
         Dialog<Musteri> dialog = new Dialog<>();
         dialog.setTitle("Müşteri Güncelle");
         dialog.setHeaderText("Seçili Müşteri: " + m.getAdi() + " " + m.getSoyadi());
@@ -155,7 +154,6 @@ public class MusterilerController {
         ButtonType iptalButton = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(kaydetButton, iptalButton);
 
-        // 🔹 Form alanları
         TextField txtAdi = new TextField(m.getAdi());
         TextField txtSoyadi = new TextField(m.getSoyadi());
         TextField txtTelefon = new TextField(m.getTelefon());
@@ -164,14 +162,6 @@ public class MusterilerController {
         TextField txtBorc = new TextField(String.valueOf(m.getBorc()));
         txtBorc.setEditable(false);
 
-        txtAdi.setPromptText("Adı");
-        txtSoyadi.setPromptText("Soyadı");
-        txtTelefon.setPromptText("Telefon");
-        txtEmail.setPromptText("E-posta");
-        txtAdres.setPromptText("Adres");
-        txtBorc.setPromptText("Borç (₺)");
-
-        // 🔹 Layout
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -186,16 +176,10 @@ public class MusterilerController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // 🔹 Kaydet butonuna basılınca
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == kaydetButton) {
-
-                // Boş alan kontrolü
                 if (txtAdi.getText().isEmpty() || txtSoyadi.getText().isEmpty()) {
-                    Alert uyar = new Alert(Alert.AlertType.WARNING);
-                    uyar.setTitle("Eksik Bilgi");
-                    uyar.setHeaderText("Ad ve Soyad alanları boş bırakılamaz!");
-                    uyar.showAndWait();
+                    uyari("Eksik Bilgi", "Ad ve Soyad alanları boş bırakılamaz!");
                     return null;
                 }
 
@@ -204,73 +188,42 @@ public class MusterilerController {
                 m.setTelefon(txtTelefon.getText().trim());
                 m.setEmail(txtEmail.getText().trim());
                 m.setAdres(txtAdres.getText().trim());
-
-                try {
-                    m.setBorc(Double.parseDouble(txtBorc.getText().trim()));
-                } catch (NumberFormatException e) {
-                    m.setBorc(0);
-                }
                 return m;
             }
             return null;
         });
 
-        // 🔹 Popup sonucu
         dialog.showAndWait().ifPresent(guncellenen -> {
             boolean basarili = DatabaseFunctions.musteriGuncelle(guncellenen);
 
-            if (basarili) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Başarılı");
-                alert.setHeaderText(null);
-                alert.setContentText("Müşteri başarıyla güncellendi!");
-                alert.showAndWait();
-                musteriListesiniYukle(); // tabloyu yenile
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Hata");
-                alert.setHeaderText("Güncelleme başarısız!");
-                alert.setContentText("Veritabanına kaydedilirken bir hata oluştu.");
-                alert.showAndWait();
-            }
+            if (basarili)
+                bilgi("Başarılı", "Müşteri başarıyla güncellendi!");
+            else
+                hata("Hata", "Güncelleme sırasında bir hata oluştu.");
+            musteriListesiniYukle();
         });
     }
 
     @FXML
     private void handleMusteriSil() {
-        Musteri secili = getSeciliMusteri(); // Seçili müşteri kontrolü
+        Musteri secili = getSeciliMusteri();
         if (secili == null) return;
 
         Alert onay = new Alert(Alert.AlertType.CONFIRMATION);
         onay.setTitle("Silme Onayı");
         onay.setHeaderText("Müşteri Silinecek");
         onay.setContentText("Bu müşteriyi silmek istediğine emin misin?\n\n"
-                + "👤 " + secili.getAdi() + " " + secili.getSoyadi() + "\n📞 " + secili.getTelefon());
+                + "👤 " + secili.getAdi() + " " + secili.getSoyadi()
+                + "\n📞 " + secili.getTelefon());
 
-        ButtonType evet = new ButtonType("Evet", ButtonBar.ButtonData.OK_DONE);
-        ButtonType hayir = new ButtonType("Hayır", ButtonBar.ButtonData.CANCEL_CLOSE);
-        onay.getButtonTypes().setAll(evet, hayir);
-
-        onay.showAndWait().ifPresent(cevap -> {
-            if (cevap == evet) {
-                boolean basarili = DatabaseFunctions.musteriSil(secili.getId());
-
-                if (basarili) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Başarılı");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Müşteri başarıyla silindi.");
-                    alert.showAndWait();
-                    musteriListesiniYukle(); // tabloyu yenile
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Hata");
-                    alert.setHeaderText("Silme işlemi başarısız!");
-                    alert.setContentText("Veritabanı işlemi sırasında hata oluştu.");
-                    alert.showAndWait();
-                }
-            }
-        });
+        if (onay.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            boolean basarili = DatabaseFunctions.musteriSil(secili.getId());
+            if (basarili)
+                bilgi("Başarılı", "Müşteri başarıyla silindi.");
+            else
+                hata("Hata", "Silme işlemi sırasında hata oluştu.");
+            musteriListesiniYukle();
+        }
     }
 
     @FXML
@@ -284,18 +237,37 @@ public class MusterilerController {
         }
     }
 
+    // 🔹 Yardımcı Metodlar
     private Musteri getSeciliMusteri() {
         Musteri secili = tableMusteriler.getSelectionModel().getSelectedItem();
-
         if (secili == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Uyarı");
-            alert.setHeaderText("Müşteri Seçilmedi");
-            alert.setContentText("Lütfen önce tablodan bir müşteri seçiniz.");
-            alert.showAndWait();
+            uyari("Müşteri Seçilmedi", "Lütfen tablodan bir müşteri seçin.");
             return null;
         }
-
         return secili;
+    }
+
+    private void bilgi(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
+    }
+
+    private void uyari(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
+    }
+
+    private void hata(String baslik, String icerik) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(baslik);
+        alert.setHeaderText(null);
+        alert.setContentText(icerik);
+        alert.showAndWait();
     }
 }

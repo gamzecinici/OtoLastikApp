@@ -97,11 +97,37 @@ public class LastikEkleController {
 
         try (Connection conn = DatabaseConnection.baglan()) {
 
+            // 🔹 1. Bu ürün zaten var mı kontrol et
+            String kontrolSql = """
+            SELECT COUNT(*) FROM urunler
+            WHERE markaId = ? AND model = ? AND tipId = ? AND ebatId = ? 
+                  AND hizEndeksId = ? AND yukEndeksId = ? AND aktif = 1
+            """;
+
+            var kontrolPs = conn.prepareStatement(kontrolSql);
+            kontrolPs.setInt(1, marka.getId());
+            kontrolPs.setString(2, model);
+            kontrolPs.setInt(3, tip.getId());
+            kontrolPs.setInt(4, ebat.getId());
+            kontrolPs.setInt(5, hiz.getId());
+            kontrolPs.setInt(6, yuk.getId());
+
+            var rs = kontrolPs.executeQuery();
+            rs.next();
+            int sayi = rs.getInt(1);
+
+            if (sayi > 0) {
+                alert(Alert.AlertType.WARNING, "Zaten Var",
+                        "Bu özelliklere sahip bir ürün zaten sistemde mevcut!");
+                return;
+            }
+
+            // 🔹 2. Ürün yoksa ekle
             String sql = """
-                INSERT INTO urunler 
-                (markaId, model, tipId, ebatId, hizEndeksId, yukEndeksId, alisFiyati, satisFiyati, adet, eklenmeTarihi, aktif)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 1)
-                """;
+            INSERT INTO urunler 
+            (markaId, model, tipId, ebatId, hizEndeksId, yukEndeksId, alisFiyati, satisFiyati, adet, eklenmeTarihi, aktif)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 1)
+            """;
 
             var ps = conn.prepareStatement(sql);
             ps.setInt(1, marka.getId());
