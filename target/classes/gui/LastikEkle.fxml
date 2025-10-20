@@ -19,9 +19,11 @@
                      -fx-padding: 40;
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 4);">
 
-            <!-- Başlık -->
-            <Label text="Yeni Ürün Ekle"
-                   style="-fx-font-size: 28px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <Label text="🎁 YENİ ÜRÜN EKLE"
+                   style="-fx-font-size: 28px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;
+                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 8, 0.3, 0, 2);"/>
 
             <!-- Form -->
             <GridPane hgap="20" vgap="20" alignment="CENTER">
@@ -36,7 +38,7 @@
                        style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
                 <ComboBox fx:id="comboMarka" promptText="Seçiniz"
                           GridPane.rowIndex="0" GridPane.columnIndex="1"
-                          style="
+                          style="-fx-pref-width: 150;
                               -fx-background-color:#2a3441;
                               -fx-border-color:#6b7280;
                               -fx-border-radius:8;
@@ -49,8 +51,13 @@
                 </ComboBox>
                 <Button text="+Ekle" onAction="#handleMarkaEkle"
                         GridPane.rowIndex="0" GridPane.columnIndex="2"
-                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
-                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+                        style="-fx-background-color: linear-gradient(to right,#475569,#334155);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:10;
+                               -fx-pref-width:90; -fx-pref-height:32;
+                               -fx-cursor:hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 5, 0, 0, 2);
+                               -fx-font-size:13px;"/>
 
                 <!-- MODEL -->
                 <Label text="Model:" GridPane.rowIndex="1" GridPane.columnIndex="0"
@@ -69,7 +76,8 @@
                        style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
                 <ComboBox fx:id="comboTip" promptText="Seçiniz"
                           GridPane.rowIndex="2" GridPane.columnIndex="1"
-                          style="-fx-background-color:#2a3441;
+                          style="-fx-pref-width: 150;
+                                 -fx-background-color:#2a3441;
                                  -fx-border-color:#6b7280;
                                  -fx-border-radius:8;
                                  -fx-background-radius:8;
@@ -80,15 +88,21 @@
                 </ComboBox>
                 <Button text="+Ekle" onAction="#handleTipEkle"
                         GridPane.rowIndex="2" GridPane.columnIndex="2"
-                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
-                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+                        style="-fx-background-color: linear-gradient(to right,#475569,#334155);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:10;
+                               -fx-pref-width:90; -fx-pref-height:32;
+                               -fx-cursor:hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 5, 0, 0, 2);
+                               -fx-font-size:13px;"/>
 
                 <!-- EBAT -->
                 <Label text="Ebat:" GridPane.rowIndex="3" GridPane.columnIndex="0"
                        style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
                 <ComboBox fx:id="comboEbat" promptText="Seçiniz"
                           GridPane.rowIndex="3" GridPane.columnIndex="1"
-                          style="-fx-background-color:#2a3441;
+                          style="-fx-pref-width: 150;
+                                 -fx-background-color:#2a3441;
                                  -fx-border-color:#6b7280;
                                  -fx-border-radius:8;
                                  -fx-background-radius:8;
@@ -99,15 +113,21 @@
                 </ComboBox>
                 <Button text="+Ekle" onAction="#handleEbatEkle"
                         GridPane.rowIndex="3" GridPane.columnIndex="2"
-                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
-                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+                        style="-fx-background-color: linear-gradient(to right,#475569,#334155);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:10;
+                               -fx-pref-width:90; -fx-pref-height:32;
+                               -fx-cursor:hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 5, 0, 0, 2);
+                               -fx-font-size:13px;"/>
 
                 <!-- HIZ ENDEKSİ -->
                 <Label text="Hız Endeksi:" GridPane.rowIndex="4" GridPane.columnIndex="0"
                        style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
                 <ComboBox fx:id="comboHiz" promptText="Seçiniz"
                           GridPane.rowIndex="4" GridPane.columnIndex="1"
-                          style="-fx-background-color:#2a3441;
+                          style="-fx-pref-width: 150;
+                                 -fx-background-color:#2a3441;
                                  -fx-border-color:#6b7280;
                                  -fx-border-radius:8;
                                  -fx-background-radius:8;
@@ -118,15 +138,21 @@
                 </ComboBox>
                 <Button text="+Ekle" onAction="#handleHizEkle"
                         GridPane.rowIndex="4" GridPane.columnIndex="2"
-                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
-                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+                        style="-fx-background-color: linear-gradient(to right,#475569,#334155);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:10;
+                               -fx-pref-width:90; -fx-pref-height:32;
+                               -fx-cursor:hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 5, 0, 0, 2);
+                               -fx-font-size:13px;"/>
 
                 <!-- YÜK ENDEKSİ -->
                 <Label text="Yük Endeksi:" GridPane.rowIndex="5" GridPane.columnIndex="0"
                        style="-fx-text-fill:#e2e8f0; -fx-font-weight:bold;"/>
                 <ComboBox fx:id="comboYuk" promptText="Seçiniz"
                           GridPane.rowIndex="5" GridPane.columnIndex="1"
-                          style="-fx-background-color:#2a3441;
+                          style="-fx-pref-width: 150;
+                                 -fx-background-color:#2a3441;
                                  -fx-border-color:#6b7280;
                                  -fx-border-radius:8;
                                  -fx-background-radius:8;
@@ -137,8 +163,13 @@
                 </ComboBox>
                 <Button text="+Ekle" onAction="#handleYukEkle"
                         GridPane.rowIndex="5" GridPane.columnIndex="2"
-                        style="-fx-background-color:linear-gradient(to right,#2563eb,#1e3a8a);
-                               -fx-text-fill:white; -fx-font-weight:bold; -fx-background-radius:10;"/>
+                        style="-fx-background-color: linear-gradient(to right,#475569,#334155);
+                               -fx-text-fill:white; -fx-font-weight:bold;
+                               -fx-background-radius:10;
+                               -fx-pref-width:90; -fx-pref-height:32;
+                               -fx-cursor:hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 5, 0, 0, 2);
+                               -fx-font-size:13px;"/>
 
                 <!-- ALIŞ -->
                 <Label text="Alış Fiyatı (₺):" GridPane.rowIndex="6" GridPane.columnIndex="0"
@@ -180,13 +211,21 @@
             <!-- BUTONLAR -->
             <HBox spacing="20" alignment="CENTER">
                 <Button fx:id="btnKaydet" text="Ürün Ekle" onAction="#handleKaydet"
-                        style="-fx-background-color: linear-gradient(to right,#3b82f6,#2563eb);
-                               -fx-text-fill:white; -fx-font-weight:bold;
-                               -fx-background-radius:14; -fx-pref-width:170;"/>
+                        style="-fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+                               -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-background-radius: 12;
+                               -fx-pref-width: 180; -fx-pref-height: 45;
+                               -fx-font-size: 14px;
+                               -fx-cursor: hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
                 <Button text="Geri" onAction="#handleGeri"
-                        style="-fx-background-color: linear-gradient(to right,#dc2626,#b91c1c);
-                               -fx-text-fill:white; -fx-font-weight:bold;
-                               -fx-background-radius:14; -fx-pref-width:130;"/>
+                        style="-fx-background-color: linear-gradient(to right, #dc2626, #b91c1c);
+                               -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-background-radius: 12;
+                               -fx-pref-width: 150; -fx-pref-height: 45;
+                               -fx-font-size: 14px;
+                               -fx-cursor: hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);"/>
             </HBox>
         </VBox>
     </children>

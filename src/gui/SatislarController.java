@@ -1,17 +1,21 @@
 package gui;
 
 import database.DatabaseConnection;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import model.Satis;
+import org.controlsfx.control.table.TableFilter;
 
 import java.io.IOException;
 import java.sql.*;
@@ -56,6 +60,7 @@ public class SatislarController {
         colTarih.setCellValueFactory(new PropertyValueFactory<>("tarih"));
 
         verileriGetir();
+        Platform.runLater(() -> TableFilter.forTableView(tableSatislar).apply());
 
         colOdendi.setCellValueFactory(new PropertyValueFactory<>("odendi"));
         colOdendi.setCellFactory(column -> new TableCell<>() {
@@ -191,15 +196,57 @@ public class SatislarController {
         double alinacak = secilen.getAlinacakTutar();
         double kalan = alinacak - mevcutAlinan;
 
+        if(kalan == 0){
+            bilgi("Borç Yok", "Bu satışa ait bir borç yoktur");
+            return;
+        }
+
         TextInputDialog dialog = new TextInputDialog("");
         dialog.setTitle("Satış Güncelleme");
         dialog.setHeaderText(
                 "Müşteri: " + secilen.getMusteriAdiSoyadi() + "\n" +
-                        "Önceden alınan tutar: " + mevcutAlinan + " ₺\n" +
                         "Toplam tutar: " + alinacak + " ₺\n" +
-                        "Kalan borç: " + kalan + " ₺"
+                        "Önceden alınan tutar: " + mevcutAlinan + " ₺\n" +
+                        "Mevcut borç: " + kalan + " ₺"
         );
-        dialog.setContentText("Yeni alınan tutarı girin (₺):");
+
+// 🔹 GridPane yapısı: input alanı + kalan borç etiketi
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(10, 10, 10, 10));
+
+        Label lblYeniTutar = new Label("Yeni alınan tutarı girin (₺):");
+        TextField inputField = dialog.getEditor();
+
+        Label lblYeniKalan = new Label("Yeni kalan borç: " + kalan + " ₺");
+        lblYeniKalan.setStyle("-fx-text-fill: #0078d7; -fx-font-weight: bold;");
+
+        grid.add(lblYeniTutar, 0, 0);
+        grid.add(inputField, 1, 0);
+        grid.add(lblYeniKalan, 0, 1, 2, 1);
+
+// 🔹 Grid’i dialog’a yerleştir
+        dialog.getDialogPane().setContent(grid);
+
+// 🔹 Kullanıcı yazdıkça otomatik hesapla
+        inputField.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                double girilen = newVal.isEmpty() ? 0 : Double.parseDouble(newVal);
+                double yeniKalan = Math.max(0, kalan - girilen);
+                lblYeniKalan.setText("Yeni kalan borç: " + yeniKalan + " ₺");
+
+                if (yeniKalan == 0) {
+                    lblYeniKalan.setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+                } else {
+                    lblYeniKalan.setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
+                }
+            } catch (NumberFormatException e) {
+                lblYeniKalan.setText("Yeni kalan borç: - ₺");
+                lblYeniKalan.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
+            }
+        });
+
 
         dialog.showAndWait().ifPresent(deger -> {
             try {

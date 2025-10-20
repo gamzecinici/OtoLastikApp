@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.AlimGecmisiController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b);">
+
+    <children>
+        <VBox spacing="18" alignment="TOP_CENTER"
+              AnchorPane.topAnchor="20" AnchorPane.leftAnchor="20"
+              AnchorPane.rightAnchor="20" AnchorPane.bottomAnchor="20"
+              style="-fx-background-color: rgba(255,255,255,0.05);
+                     -fx-background-radius: 16;
+                     -fx-padding: 24;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 15, 0.2, 0, 4);">
+
+            <!-- Başlık -->
+            <Label text="📜 ÜRÜN ALIM GEÇMİŞİ"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #f1f5f9;"/>
+
+            <!-- Alım Geçmişi Tablosu -->
+            <TableView fx:id="tableAlimGecmisi"
+                       prefHeight="420" prefWidth="850"
+                       style="-fx-background-color: #2b3b4e;
+                              -fx-control-inner-background: #2b3b4e;
+                              -fx-border-color: #475569;
+                              -fx-border-radius: 8;
+                              -fx-background-radius: 8;
+                              -fx-table-cell-border-color: #475569;
+                              -fx-table-header-border-color: #475569;
+                              -fx-selection-bar: #3b82f6;
+                              -fx-selection-bar-non-focused: #334155;">
+
+                <columns>
+                    <TableColumn fx:id="colUrunId" text="Ürün ID" prefWidth="100"/>
+                    <TableColumn fx:id="colAlimTarihi" text="Alım Tarihi" prefWidth="150"/>
+                    <TableColumn fx:id="colAlisFiyati" text="Alış Fiyatı ₺" prefWidth="120"/>
+                    <TableColumn fx:id="colAlinanAdet" text="Alınan Adet" prefWidth="120"/>
+                    <TableColumn fx:id="colAciklama" text="Açıklama" prefWidth="250"/>
+                </columns>
+
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+            </TableView>
+
+            <!-- Alt Butonlar -->
+            <HBox alignment="CENTER_RIGHT"
+                  AnchorPane.bottomAnchor="25"
+                  AnchorPane.rightAnchor="35">
+                <Button text="↩ Geri Dön"
+                        onAction="#handleGeriDon"
+                        style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);
+                               -fx-text-fill: white;
+                               -fx-font-size: 14px;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-pref-height: 38;
+                               -fx-pref-width: 140;
+                               -fx-cursor: hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 2);"/>
+            </HBox>
+
+        </VBox>
+    </children>
+</AnchorPane>

@@ -8,11 +8,14 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import model.Lastik;
 import model.MusteriLite;
 import org.controlsfx.control.table.TableFilter;
@@ -120,33 +123,88 @@ public class LastiklerController {
             return;
         }
 
-        TextInputDialog dialog = new TextInputDialog();
+        // 🔹 Dialog için özel içerik oluştur
+        Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Stok Artır");
         dialog.setHeaderText("Seçilen ürün: " + secilen.getMarka() + " " + secilen.getTip());
-        dialog.setContentText("Eklenecek adet miktarını girin:");
 
-        dialog.showAndWait().ifPresent(giris -> {
+        // Butonlar
+        ButtonType okButtonType = new ButtonType("Onayla", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+        // 🔹 GridPane içinde iki input alanı (adet ve fiyat)
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField adetField = new TextField();
+        adetField.setPromptText("Eklenecek adet");
+
+        TextField fiyatField = new TextField();
+        fiyatField.setPromptText("Yeni alış fiyatı (isteğe bağlı)");
+
+        grid.add(new Label("Eklenecek adet:"), 0, 0);
+        grid.add(adetField, 1, 0);
+        grid.add(new Label("Yeni alış fiyatı:"), 0, 1);
+        grid.add(fiyatField, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // 🔹 Enter tuşu aktif et
+        Platform.runLater(adetField::requestFocus);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == okButtonType) {
+                return new Pair<>(adetField.getText(), fiyatField.getText());
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(result -> {
             try {
-                int eklenecek = Integer.parseInt(giris);
-                if (eklenecek <= 0) throw new NumberFormatException();
+                int eklenecekAdet = Integer.parseInt(result.getKey());
+                if (eklenecekAdet <= 0) throw new NumberFormatException();
 
-                String sql = "UPDATE urunler SET adet = adet + ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+                String yeniFiyatStr = result.getValue();
+                boolean fiyatDegisti = yeniFiyatStr != null && !yeniFiyatStr.trim().isEmpty();
+
+                String sql;
+                if (fiyatDegisti) {
+                    sql = "UPDATE urunler SET adet = adet + ?, alisFiyati = ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+                } else {
+                    sql = "UPDATE urunler SET adet = adet + ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+                }
+
                 try (Connection conn = DatabaseConnection.baglan();
                      PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setInt(1, eklenecek);
-                    ps.setInt(2, secilen.getId());
+
+                    ps.setInt(1, eklenecekAdet);
+
+                    if (fiyatDegisti) {
+                        double yeniFiyat = Double.parseDouble(yeniFiyatStr);
+                        ps.setDouble(2, yeniFiyat);
+                        ps.setInt(3, secilen.getId());
+                    } else {
+                        ps.setInt(2, secilen.getId());
+                    }
+
                     ps.executeUpdate();
                 }
 
-                bilgiMesaji("Stok " + eklenecek + " adet artırıldı!");
+                String mesaj = "Stok " + eklenecekAdet + " adet artırıldı!";
+                if (fiyatDegisti) mesaj += "\nYeni alış fiyatı güncellendi.";
+
+                bilgiMesaji(mesaj);
                 lastikleriYukle();
 
+            } catch (NumberFormatException e) {
+                hataMesaji("Geçerli bir sayı girin.");
             } catch (Exception e) {
                 hataMesaji("Stok artırılırken hata oluştu:\n" + e.getMessage());
             }
         });
     }
-
 
     // ======================================================
     //  SATIŞ YAP (TOPLU VE KESİN DÜZELTME)
