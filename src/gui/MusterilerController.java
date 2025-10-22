@@ -25,8 +25,13 @@ public class MusterilerController {
 
     @FXML
     public void initialize() {
+        // 🔹 Müşteri listesini yükle
         musteriListesiniYukle();
+
+        // 🔹 Ortak layout yenileme (tam ekran uyumlu)
+        LayoutRefresher.refresh(tableMusteriler);
     }
+
 
     /**
      * Veritabanından müşterileri çeker ve tabloya yükler.

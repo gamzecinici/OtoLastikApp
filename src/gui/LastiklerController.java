@@ -44,6 +44,7 @@ public class LastiklerController {
     // ======================================================
     @FXML
     public void initialize() {
+        // 🔹 Tablo sütunlarını model property’leriyle eşleştir
         colMarka.setCellValueFactory(data -> data.getValue().markaProperty());
         colTip.setCellValueFactory(data -> data.getValue().tipProperty());
         colEbat.setCellValueFactory(data -> data.getValue().ebatProperty());
@@ -54,8 +55,14 @@ public class LastiklerController {
         colAdet.setCellValueFactory(data -> data.getValue().adetProperty().asObject());
         colTarih.setCellValueFactory(data -> data.getValue().tarihProperty());
 
+        // 🔹 Tablo verilerini yükle
         lastikleriYukle();
+
+        // 🔹 Filtre uygula
         Platform.runLater(() -> TableFilter.forTableView(tableLastikler).apply());
+
+        // 🔹 Ortak layout yenileme (tam ekran uyumlu)
+        LayoutRefresher.refresh(tableLastikler);
     }
 
     // ======================================================
@@ -116,95 +123,110 @@ public class LastiklerController {
     //  STOK ARTIR
     // ======================================================
     @FXML
-    private void handleStokArtir() {
+    private void handleUrunGuncelle() {
         Lastik secilen = tableLastikler.getSelectionModel().getSelectedItem();
         if (secilen == null) {
-            showWarning("Stok Artırma", "Lütfen önce bir ürün seçin.");
+            showWarning("Ürün Güncelleme", "Lütfen önce bir ürün seçin.");
             return;
         }
 
-        // 🔹 Dialog için özel içerik oluştur
-        Dialog<Pair<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Stok Artır");
+        Dialog<Pair<String[], String>> dialog = new Dialog<>();
+        dialog.setTitle("Ürün Güncelle");
         dialog.setHeaderText("Seçilen ürün: " + secilen.getMarka() + " " + secilen.getTip());
 
-        // Butonlar
-        ButtonType okButtonType = new ButtonType("Onayla", ButtonBar.ButtonData.OK_DONE);
+        ButtonType okButtonType = new ButtonType("Kaydet", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
-        // 🔹 GridPane içinde iki input alanı (adet ve fiyat)
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
         TextField adetField = new TextField();
-        adetField.setPromptText("Eklenecek adet");
+        adetField.setPromptText("Yeni adet (isteğe bağlı)");
 
-        TextField fiyatField = new TextField();
-        fiyatField.setPromptText("Yeni alış fiyatı (isteğe bağlı)");
+        TextField alisField = new TextField();
+        alisField.setPromptText("Yeni alış fiyatı (isteğe bağlı)");
 
-        grid.add(new Label("Eklenecek adet:"), 0, 0);
+        TextField satisField = new TextField();
+        satisField.setPromptText("Yeni satış fiyatı (isteğe bağlı)");
+
+        grid.add(new Label("Yeni adet:"), 0, 0);
         grid.add(adetField, 1, 0);
         grid.add(new Label("Yeni alış fiyatı:"), 0, 1);
-        grid.add(fiyatField, 1, 1);
+        grid.add(alisField, 1, 1);
+        grid.add(new Label("Yeni satış fiyatı:"), 0, 2);
+        grid.add(satisField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
-
-        // 🔹 Enter tuşu aktif et
         Platform.runLater(adetField::requestFocus);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButtonType) {
-                return new Pair<>(adetField.getText(), fiyatField.getText());
+                return new Pair<>(new String[]{adetField.getText(), alisField.getText(), satisField.getText()}, "");
             }
             return null;
         });
 
         dialog.showAndWait().ifPresent(result -> {
-            try {
-                int eklenecekAdet = Integer.parseInt(result.getKey());
-                if (eklenecekAdet <= 0) throw new NumberFormatException();
+            String[] values = result.getKey();
+            String adetStr = values[0].trim();
+            String alisStr = values[1].trim();
+            String satisStr = values[2].trim();
 
-                String yeniFiyatStr = result.getValue();
-                boolean fiyatDegisti = yeniFiyatStr != null && !yeniFiyatStr.trim().isEmpty();
+            if (adetStr.isEmpty() && alisStr.isEmpty() && satisStr.isEmpty()) {
+                showWarning("Boş Güncelleme", "Güncellemek için en az bir alan doldurun.");
+                return;
+            }
 
-                String sql;
-                if (fiyatDegisti) {
-                    sql = "UPDATE urunler SET adet = adet + ?, alisFiyati = ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
-                } else {
-                    sql = "UPDATE urunler SET adet = adet + ?, guncellenmeTarihi = GETDATE() WHERE id = ?";
+            StringBuilder sql = new StringBuilder("UPDATE urunler SET ");
+            boolean first = true;
+
+            if (!adetStr.isEmpty()) {
+                sql.append("adet = ?");
+                first = false;
+            }
+            if (!alisStr.isEmpty()) {
+                if (!first) sql.append(", ");
+                sql.append("alisFiyati = ?");
+                first = false;
+            }
+            if (!satisStr.isEmpty()) {
+                if (!first) sql.append(", ");
+                sql.append("satisFiyati = ?");
+            }
+
+            sql.append(", guncellenmeTarihi = GETDATE() WHERE id = ?");
+
+            try (Connection conn = DatabaseConnection.baglan();
+                 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+                int index = 1;
+
+                if (!adetStr.isEmpty()) {
+                    ps.setInt(index++, Integer.parseInt(adetStr));
+                }
+                if (!alisStr.isEmpty()) {
+                    ps.setDouble(index++, Double.parseDouble(alisStr));
+                }
+                if (!satisStr.isEmpty()) {
+                    ps.setDouble(index++, Double.parseDouble(satisStr));
                 }
 
-                try (Connection conn = DatabaseConnection.baglan();
-                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(index, secilen.getId());
+                ps.executeUpdate();
 
-                    ps.setInt(1, eklenecekAdet);
-
-                    if (fiyatDegisti) {
-                        double yeniFiyat = Double.parseDouble(yeniFiyatStr);
-                        ps.setDouble(2, yeniFiyat);
-                        ps.setInt(3, secilen.getId());
-                    } else {
-                        ps.setInt(2, secilen.getId());
-                    }
-
-                    ps.executeUpdate();
-                }
-
-                String mesaj = "Stok " + eklenecekAdet + " adet artırıldı!";
-                if (fiyatDegisti) mesaj += "\nYeni alış fiyatı güncellendi.";
-
-                bilgiMesaji(mesaj);
+                bilgiMesaji("Ürün bilgileri başarıyla güncellendi!");
                 lastikleriYukle();
 
             } catch (NumberFormatException e) {
-                hataMesaji("Geçerli bir sayı girin.");
+                hataMesaji("Lütfen geçerli sayı formatı kullanın.");
             } catch (Exception e) {
-                hataMesaji("Stok artırılırken hata oluştu:\n" + e.getMessage());
+                hataMesaji("Ürün güncellenirken hata oluştu:\n" + e.getMessage());
             }
         });
     }
+
 
     // ======================================================
     //  SATIŞ YAP (TOPLU VE KESİN DÜZELTME)

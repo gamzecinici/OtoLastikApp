@@ -32,9 +32,13 @@ public class PanelController {
 
     @FXML
     public void initialize() {
+        // 🔹 Başlangıç işlemleri
         logoYukle();
         tarihSaatGuncelle();
         veritabaniOzetleriniGetir();
+
+        // 🔹 Ortak layout yenileme (tam ekran uyumlu)
+        LayoutRefresher.refresh(dateLabel);
     }
 
     // 🔹 Logo yükleme

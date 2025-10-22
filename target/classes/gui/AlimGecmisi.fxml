@@ -23,7 +23,7 @@
             <Label text="📜 ÜRÜN ALIM GEÇMİŞİ"
                    style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #f1f5f9;"/>
 
-            <!-- Alım Geçmişi Tablosu -->
+            <!-- Tablo -->
             <TableView fx:id="tableAlimGecmisi"
                        prefHeight="420" prefWidth="850"
                        style="-fx-background-color: #2b3b4e;
@@ -37,11 +37,12 @@
                               -fx-selection-bar-non-focused: #334155;">
 
                 <columns>
-                    <TableColumn fx:id="colUrunId" text="Ürün ID" prefWidth="100"/>
-                    <TableColumn fx:id="colAlimTarihi" text="Alım Tarihi" prefWidth="150"/>
+                    <TableColumn fx:id="colMarka" text="Marka" prefWidth="150"/>
+                    <TableColumn fx:id="colModel" text="Model" prefWidth="150"/>
+                    <TableColumn fx:id="colAlimTarihi" text="Alım Tarihi" prefWidth="160"/>
                     <TableColumn fx:id="colAlisFiyati" text="Alış Fiyatı ₺" prefWidth="120"/>
                     <TableColumn fx:id="colAlinanAdet" text="Alınan Adet" prefWidth="120"/>
-                    <TableColumn fx:id="colAciklama" text="Açıklama" prefWidth="250"/>
+                    <TableColumn fx:id="colAciklama" text="Açıklama" prefWidth="200"/>
                 </columns>
 
                 <columnResizePolicy>
@@ -49,10 +50,8 @@
                 </columnResizePolicy>
             </TableView>
 
-            <!-- Alt Butonlar -->
-            <HBox alignment="CENTER_RIGHT"
-                  AnchorPane.bottomAnchor="25"
-                  AnchorPane.rightAnchor="35">
+            <!-- Geri Dön Butonu -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
                 <Button text="↩ Geri Dön"
                         onAction="#handleGeriDon"
                         style="-fx-background-color: linear-gradient(to right, #dc2626, #ef4444);

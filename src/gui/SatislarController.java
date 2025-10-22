@@ -58,37 +58,29 @@ public class SatislarController {
         colAlinan.setCellValueFactory(new PropertyValueFactory<>("alinanTutar"));
         colKalan.setCellValueFactory(new PropertyValueFactory<>("kalanTutar"));
         colTarih.setCellValueFactory(new PropertyValueFactory<>("tarih"));
-
-        verileriGetir();
-        Platform.runLater(() -> TableFilter.forTableView(tableSatislar).apply());
-
         colOdendi.setCellValueFactory(new PropertyValueFactory<>("odendi"));
+
+        // 🔹 Hücre biçimlendirmesi (tik kutuları)
         colOdendi.setCellFactory(column -> new TableCell<>() {
             private final CheckBox checkBox = new CheckBox();
-
             {
-                checkBox.setDisable(true); // kullanıcı değiştiremeyecek
-                setAlignment(javafx.geometry.Pos.CENTER); // ✅ sütun ortalama
+                checkBox.setDisable(true);
+                setAlignment(javafx.geometry.Pos.CENTER);
             }
-
             @Override
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
-
                 if (empty || item == null) {
                     setGraphic(null);
                     return;
                 }
-
                 checkBox.setSelected(item);
-
                 if (item) {
                     checkBox.setStyle(
-                            "-fx-mark-color: #22c55e;" +   // yeşil tik
+                            "-fx-mark-color: #22c55e;" +
                                     "-fx-border-color: #22c55e;" +
                                     "-fx-border-radius: 3;" +
-                                    "-fx-background-radius: 3;" +
-                                    "-fx-opacity: 1;"
+                                    "-fx-background-radius: 3;"
                     );
                 } else {
                     checkBox.setStyle(
@@ -97,11 +89,18 @@ public class SatislarController {
                                     "-fx-opacity: 0.8;"
                     );
                 }
-
                 setGraphic(checkBox);
-                setText(null);
             }
         });
+
+        // 🔹 Verileri güvenli şekilde yükle
+        Platform.runLater(() -> {
+            verileriGetir(); // tablo verilerini getir
+            TableFilter.forTableView(tableSatislar).apply();
+        });
+
+        // 🔹 Ortak layout yenileme (tam ekran uyumlu)
+        LayoutRefresher.refresh(tableSatislar);
     }
 
     /**

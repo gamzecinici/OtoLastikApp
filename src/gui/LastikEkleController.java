@@ -2,6 +2,7 @@ package gui;
 
 import database.DatabaseConnection;
 import database.DatabaseFunctions;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -22,6 +23,7 @@ public class LastikEkleController {
 
     @FXML
     public void initialize() {
+        // 🔹 ComboBox’ları doldur
         refreshCombos();
 
         // 🔹 ComboBox yazılarını beyaz yapmak
@@ -30,7 +32,10 @@ public class LastikEkleController {
         makeComboTextWhite(comboEbat);
         makeComboTextWhite(comboHiz);
         makeComboTextWhite(comboYuk);
+
+        LayoutRefresher.refresh(comboMarka);
     }
+
 
     /**
      * Tüm ComboBox'ları veritabanından yeniler.

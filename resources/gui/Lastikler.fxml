@@ -67,8 +67,8 @@
             <!-- 🔘 Butonlar -->
             <HBox alignment="CENTER_RIGHT" spacing="12">
 
-                <Button text="+ Stok Artır"
-                        onAction="#handleStokArtir"
+                <Button text="+ Ürün Güncelle"
+                        onAction="#handleUrunGuncelle"
                         style="-fx-background-color: linear-gradient(to right, #16a34a, #22c55e);
                    -fx-text-fill: white;
                    -fx-font-weight: bold;
