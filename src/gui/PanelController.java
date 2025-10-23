@@ -44,8 +44,7 @@ public class PanelController {
     // 🔹 Logo yükleme
     private void logoYukle() {
         try {
-            String logoYolu = "C:/Users/Gamze/Desktop/lastikGUI/images/logo.png";
-            Image logo = new Image(new FileInputStream(logoYolu));
+            Image logo = new Image(getClass().getResourceAsStream("/images/logo.png"));
             logoView.setImage(logo);
 
             FadeTransition fade = new FadeTransition(Duration.seconds(1.5), logoView);
@@ -119,8 +118,6 @@ public class PanelController {
     @FXML private void handleLastikEkle() { sayfaGecis("/gui/LastikEkle.fxml", "Yeni Ürün Ekle"); }
     @FXML private void handleSatislar() { sayfaGecis("/gui/Satislar.fxml", "Satışlar"); }
     @FXML private void handleMusteriler() { sayfaGecis("/gui/Musteriler.fxml", "Müşteriler"); }
-
-    // 🆕 Yeni sayfa geçişi: Alım Geçmişi
     @FXML private void handleAlimGecmisi() { sayfaGecis("/gui/AlimGecmisi.fxml", "Alım Geçmişi"); }
 
     // 🔁 Sayfa geçiş metodu (hepsi için ortak)

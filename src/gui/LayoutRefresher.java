@@ -32,7 +32,8 @@ public class LayoutRefresher {
                     pause.play();
                 } else {
                     // 🔹 Tam ekranda sadece layout’u tazele
-                    anyNode.getScene().getRoot().requestLayout();
+                    //anyNode.getScene().getRoot().requestLayout();
+                    anyNode.getScene().getWindow().getScene().getRoot().requestLayout();
                 }
             } catch (Exception ex) {
                 System.err.println("⚠️ Layout refresh hatası: " + ex.getMessage());

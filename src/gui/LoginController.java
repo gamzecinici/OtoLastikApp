@@ -32,10 +32,7 @@ public class LoginController {
     @FXML
     public void initialize() {
         try {
-            // 🔹 Logo yükleme
-            String path = "C:/Users/Gamze/Desktop/lastikGUI/images/logo.png";
-            FileInputStream input = new FileInputStream(path);
-            Image logo = new Image(input);
+            Image logo = new Image(getClass().getResourceAsStream("/images/logo.png"));
             logoImage.setImage(logo);
         } catch (Exception e) {
             System.err.println("❌ Logo yüklenemedi: " + e.getMessage());
