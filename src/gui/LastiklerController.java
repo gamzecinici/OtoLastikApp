@@ -28,6 +28,7 @@ public class LastiklerController {
 
     @FXML private TableView<Lastik> tableLastikler;
     @FXML private TableColumn<Lastik, String> colMarka;
+    @FXML private TableColumn<Lastik, String> colModel;
     @FXML private TableColumn<Lastik, String> colTip;
     @FXML private TableColumn<Lastik, String> colEbat;
     @FXML private TableColumn<Lastik, String> colHiz;
@@ -46,6 +47,7 @@ public class LastiklerController {
     public void initialize() {
         // 🔹 Tablo sütunlarını model property’leriyle eşleştir
         colMarka.setCellValueFactory(data -> data.getValue().markaProperty());
+        colModel.setCellValueFactory(data -> data.getValue().modelProperty());
         colTip.setCellValueFactory(data -> data.getValue().tipProperty());
         colEbat.setCellValueFactory(data -> data.getValue().ebatProperty());
         colHiz.setCellValueFactory(data -> data.getValue().hizProperty());
@@ -72,26 +74,27 @@ public class LastiklerController {
         lastikListesi.clear();
 
         String sql = """
-                SELECT
-                    u.id,
-                    m.markaAdi AS marka,
-                    t.tip AS tip,
-                    CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
-                    h.hizEndeks AS hiz,
-                    y.yukEndeks AS yuk,
-                    u.alisFiyati,
-                    u.satisFiyati,
-                    u.adet,
-                    FORMAT(u.eklenmeTarihi, 'dd.MM.yyyy') AS tarih
-                FROM urunler u
-                JOIN markalar m ON u.markaId = m.id
-                JOIN tipler t ON u.tipId = t.id
-                JOIN ebatlar e ON u.ebatId = e.id
-                JOIN hizEndeksleri h ON u.hizEndeksId = h.id
-                JOIN yukEndeksleri y ON u.yukEndeksId = y.id
-                WHERE u.aktif = 1
-                ORDER BY u.eklenmeTarihi DESC;
-                """;
+            SELECT
+                u.id,
+                m.markaAdi AS marka,
+                u.model,  -- 💙 Model alanı
+                t.tip AS tip,
+                CONCAT(e.genislik, '/', e.yukseklik, ' R', e.jant) AS ebat,
+                h.hizEndeks AS hiz,
+                y.yukEndeks AS yuk,
+                u.alisFiyati,
+                u.satisFiyati,
+                u.adet,
+                FORMAT(u.eklenmeTarihi, 'dd.MM.yyyy') AS tarih
+            FROM urunler u
+            JOIN markalar m ON u.markaId = m.id
+            JOIN tipler t ON u.tipId = t.id
+            JOIN ebatlar e ON u.ebatId = e.id
+            JOIN hizEndeksleri h ON u.hizEndeksId = h.id
+            JOIN yukEndeksleri y ON u.yukEndeksId = y.id
+            WHERE u.aktif = 1
+            ORDER BY u.eklenmeTarihi DESC;
+            """;
 
         try (Connection conn = DatabaseConnection.baglan();
              Statement st = conn.createStatement();
@@ -101,6 +104,7 @@ public class LastiklerController {
                 lastikListesi.add(new Lastik(
                         rs.getInt("id"),
                         rs.getString("marka"),
+                        rs.getString("model"),     // 💙 eklendi
                         rs.getString("tip"),
                         rs.getString("ebat"),
                         rs.getString("hiz"),
@@ -118,6 +122,7 @@ public class LastiklerController {
             hataMesaji("Veriler yüklenirken hata oluştu:\n" + e.getMessage());
         }
     }
+
 
     // ======================================================
     //  STOK ARTIR

@@ -36,6 +36,7 @@
 
                 <columns>
                     <TableColumn fx:id="colMarka" text="Marka" prefWidth="110"/>
+                    <TableColumn fx:id="colModel" text="Model" prefWidth="120"/> <!-- 💙 YENİ -->
                     <TableColumn fx:id="colTip" text="Tip" prefWidth="90"/>
                     <TableColumn fx:id="colEbat" text="Ebat" prefWidth="130"/>
                     <TableColumn fx:id="colHiz" text="Hız Endeksi" prefWidth="100"/>

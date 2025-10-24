@@ -2,9 +2,19 @@ package model;
 
 import javafx.beans.property.*;
 
+/**
+ * 🔹 Lastik model sınıfı
+ * Veritabanındaki "urunler" tablosuna karşılık gelir.
+ * Marka, model, tip, ebat, hız endeksi, yük endeksi, alış/satış fiyatı, adet ve tarih bilgilerini tutar.
+ */
 public class Lastik {
+
+    // ======================================================
+    //  ALANLAR
+    // ======================================================
     private final IntegerProperty id;
     private final StringProperty marka;
+    private final StringProperty model;        // 💙 Yeni eklendi
     private final StringProperty tip;
     private final StringProperty ebat;
     private final StringProperty hiz;
@@ -14,10 +24,16 @@ public class Lastik {
     private final IntegerProperty adet;
     private final StringProperty tarih;
 
-    public Lastik(int id, String marka, String tip, String ebat, String hiz, String yuk,
-                  double alis, double satis, int adet, String tarih) {
+    // ======================================================
+    //  YAPICI METOT (CONSTRUCTOR)
+    // ======================================================
+    public Lastik(int id, String marka, String model, String tip, String ebat,
+                  String hiz, String yuk, double alis, double satis,
+                  int adet, String tarih) {
+
         this.id = new SimpleIntegerProperty(id);
         this.marka = new SimpleStringProperty(marka);
+        this.model = new SimpleStringProperty(model);   // 💙
         this.tip = new SimpleStringProperty(tip);
         this.ebat = new SimpleStringProperty(ebat);
         this.hiz = new SimpleStringProperty(hiz);
@@ -28,7 +44,10 @@ public class Lastik {
         this.tarih = new SimpleStringProperty(tarih);
     }
 
-    // --- Getter / Setter / Property metotları ---
+    // ======================================================
+    //  GETTER / SETTER / PROPERTY METOTLARI
+    // ======================================================
+
     public int getId() { return id.get(); }
     public void setId(int id) { this.id.set(id); }
     public IntegerProperty idProperty() { return id; }
@@ -36,6 +55,10 @@ public class Lastik {
     public String getMarka() { return marka.get(); }
     public void setMarka(String marka) { this.marka.set(marka); }
     public StringProperty markaProperty() { return marka; }
+
+    public String getModel() { return model.get(); }           // 💙 Yeni alan
+    public void setModel(String model) { this.model.set(model); }
+    public StringProperty modelProperty() { return model; }
 
     public String getTip() { return tip.get(); }
     public void setTip(String tip) { this.tip.set(tip); }
@@ -68,4 +91,12 @@ public class Lastik {
     public String getTarih() { return tarih.get(); }
     public void setTarih(String tarih) { this.tarih.set(tarih); }
     public StringProperty tarihProperty() { return tarih; }
+
+    // ======================================================
+    //  YARDIMCI METOTLAR (İsteğe bağlı)
+    // ======================================================
+    @Override
+    public String toString() {
+        return marka.get() + " " + model.get() + " " + tip.get() + " (" + ebat.get() + ")";
+    }
 }
