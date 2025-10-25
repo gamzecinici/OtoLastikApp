@@ -73,7 +73,7 @@ public class PanelController {
         String sqlCesit = "SELECT COUNT(DISTINCT model) AS urunCesidi FROM urunler WHERE aktif = 1";
         String sqlUrun = "SELECT COALESCE(SUM(adet), 0) AS toplamUrun FROM urunler WHERE aktif = 1";
         String sqlSatis = "SELECT COALESCE(SUM(alinacakTutar), 0) AS toplamSatis FROM satislar";
-        String sqlAlis = "SELECT COALESCE(SUM(alisFiyati * adet), 0) AS toplamAlis FROM urunler WHERE aktif = 1";
+        String sqlAlis = "SELECT COALESCE(SUM(alisFiyati * alinanAdet), 0) AS toplamAlis FROM urunAlimGecmisi";
 
         try (Connection conn = DatabaseConnection.baglan();
              PreparedStatement stmtCesit = conn.prepareStatement(sqlCesit);

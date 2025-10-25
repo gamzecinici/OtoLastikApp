@@ -206,7 +206,7 @@ public class DatabaseFunctions {
 
     public static ObservableList<MusteriLite> musterileriGetirLite() {
         ObservableList<MusteriLite> musteriler = FXCollections.observableArrayList();
-        String sql = "SELECT id, adi, soyadi, telefon, borc FROM musteriler ORDER BY adi ASC";
+        String sql = "SELECT id, adi, soyadi, telefon, borc FROM musteriler ORDER BY adi COLLATE Turkish_CI_AS ASC";
 
         try (Connection conn = DatabaseConnection.baglan();
              PreparedStatement ps = conn.prepareStatement(sql);

@@ -6,9 +6,11 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -245,8 +247,6 @@ public class LastiklerController {
         }
 
         ObservableList<MusteriLite> musterilerlite = DatabaseFunctions.musterileriGetirLite();
-
-        // 🔹 Haritayı bir kez oluştur (performans için)
         MusteriLite.initializeMap(musterilerlite);
 
         if (musterilerlite == null || musterilerlite.isEmpty()) {
@@ -266,39 +266,36 @@ public class LastiklerController {
         FilteredList<MusteriLite> filtreliListe = new FilteredList<>(musterilerlite, p -> true);
         comboMusterilite.setItems(filtreliListe);
 
-        // 🔹 Satılacak adet alanı
         TextField txtAdet = new TextField();
         txtAdet.setPromptText("Satılacak adet");
         txtAdet.setPrefWidth(150);
 
-        // 🔹 Birim fiyat alanı
         TextField txtBirimFiyat = new TextField();
         double birimFiyat = seciliLastik.getSatisFiyati();
         txtBirimFiyat.setText(String.format("%.2f", birimFiyat));
+        txtBirimFiyat.setEditable(false);
         txtBirimFiyat.setPrefWidth(150);
-        txtBirimFiyat.setEditable(false); // elle değiştirilemez
 
-        // 🔹 Toplam tutar alanı (otomatik hesaplanır)
         TextField txtToplam = new TextField();
         txtToplam.setPromptText("Toplam Tutar (₺)");
         txtToplam.setPrefWidth(150);
+        txtToplam.setEditable(false);
 
         TextField txtAlinan = new TextField();
-        txtAlinan.setPromptText("Alinan Tutar (₺)");
+        txtAlinan.setPromptText("Alınan Tutar (₺)");
         txtAlinan.setPrefWidth(150);
 
-        // 🔹 Sadece adet değiştiğinde otomatik toplam hesaplama
+        // 🔹 Adet değiştikçe toplam hesapla
         txtAdet.textProperty().addListener((obs, oldVal, newVal) -> {
             try {
                 int adet = Integer.parseInt(newVal);
                 double toplam = adet * birimFiyat;
                 txtToplam.setText(String.format("%.2f", toplam));
             } catch (NumberFormatException e) {
-                txtToplam.clear(); // Geçersiz sayı girilirse temizle
+                txtToplam.clear();
             }
         });
 
-        // 🔹 Formu bir araya getir
         VBox content = new VBox(10);
         content.getChildren().addAll(
                 new Label("Müşteri Seç:"), comboMusterilite,
@@ -309,65 +306,76 @@ public class LastiklerController {
         );
         dialog.getDialogPane().setContent(content);
 
-        // Butonları ekle
         ButtonType satBtn = new ButtonType("Sat", ButtonBar.ButtonData.OK_DONE);
         ButtonType iptalBtn = new ButtonType("İptal", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(satBtn, iptalBtn);
 
-        // 🔹 Diyalog gösterilir ve kullanıcı bir seçim yaparsa burada döner
+        // 🔹 Sat butonuna basılınca kontrol
+        Node satButtonNode = dialog.getDialogPane().lookupButton(satBtn);
+        satButtonNode.addEventFilter(ActionEvent.ACTION, event -> {
+            try {
+                double toplam = Double.parseDouble(txtToplam.getText().replace(",", "."));
+                double alinan = Double.parseDouble(txtAlinan.getText().replace(",", "."));
+
+                // 🔸 Fazla tutar kontrolü
+                if (alinan > toplam) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Hatalı Giriş");
+                    alert.setHeaderText(null);
+                    alert.setContentText("⚠ Alınan tutar toplam tutardan fazla olamaz!");
+                    alert.showAndWait();
+
+                    // 🔹 Diyalog kapanmasın
+                    event.consume();
+
+                    // 🔹 Kullanıcı tekrar girsin
+                    txtAlinan.requestFocus();
+                    txtAlinan.selectAll();
+                    return;
+                }
+
+            } catch (NumberFormatException e) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Hatalı Giriş");
+                alert.setHeaderText(null);
+                alert.setContentText("⚠ Lütfen geçerli bir sayı girin.");
+                alert.showAndWait();
+
+                event.consume();
+                txtAlinan.requestFocus();
+                txtAlinan.selectAll();
+                return;
+            }
+        });
+
+        // 🔹 Satış işlemi
         dialog.showAndWait().ifPresent(result -> {
             if (result == satBtn) {
                 Object m = comboMusterilite.getSelectionModel().getSelectedItem();
                 if (m != null) {
-                    Object secilenAd = comboMusterilite.getSelectionModel().getSelectedItem();
-                    long musteriId = MusteriLite.getIdFromGorunenAd(secilenAd);
+                    long musteriId = MusteriLite.getIdFromGorunenAd(m);
                     long urunId = seciliLastik.getId();
 
                     try {
-                        // 🔹 Boş veya hatalı girişleri önle
-                        String adetStr = txtAdet.getText().trim();
-                        String toplamStr = txtToplam.getText().trim().replace(",", ".");
-                        String alinanStr = txtAlinan.getText().trim().replace(",", ".");
-
-                        // 🔹 Boş olanları 0 yap
-                        if (adetStr.isEmpty()) adetStr = "0";
-                        if (toplamStr.isEmpty()) toplamStr = "0";
-                        if (alinanStr.isEmpty()) alinanStr = "0";
-
-                        // 🔹 Tür dönüşümleri
-                        int adet = Integer.parseInt(adetStr);
-                        double toplamTutar = Double.parseDouble(toplamStr);
-                        double alinanTutar = Double.parseDouble(alinanStr);
-
-                        // 🔹 Kalan tutar
+                        int adet = Integer.parseInt(txtAdet.getText());
+                        double toplamTutar = Double.parseDouble(txtToplam.getText().replace(",", "."));
+                        double alinanTutar = Double.parseDouble(txtAlinan.getText().replace(",", "."));
                         double kalan = toplamTutar - alinanTutar;
+                        boolean odendi = kalan == 0;
 
-                        boolean odendi = false;
-
-                        if(kalan == 0){
-                            odendi = true;
-                        }
-
-                        // 🔹 Konsola yaz
-                        System.out.println("Seçilen Lastik ID  : " + urunId);
-                        System.out.println("Seçilen Müşteri ID : " + musteriId);
-                        System.out.println("Adet          : " + adet);
-                        System.out.println("Toplam Tutar  : " + String.format("%.2f", toplamTutar) + " ₺");
-                        System.out.println("Alınan Tutar  : " + String.format("%.2f", alinanTutar) + " ₺");
-                        System.out.println("Kalan         : " + String.format("%.2f", kalan) + " ₺");
-                        System.out.println("Ödendi        : " + odendi);
-
-                        if(adet > seciliLastik.getAdet()){
-                            showWarning("Stok Aşımı", "Stokta Yeterli Ürün Yok.\nMevcut Stok: " + seciliLastik.getAdet());
+                        if (adet > seciliLastik.getAdet()) {
+                            showWarning("Stok Aşımı", "Stokta yeterli ürün yok.\nMevcut Stok: " + seciliLastik.getAdet());
                             return;
                         }
 
                         boolean satisEklendi = DatabaseFunctions.satisEkle(urunId, musteriId, adet, toplamTutar, alinanTutar, odendi);
-                        bilgiMesaji("Satış Başarıyla Yapıldı.");
-                        lastikleriYukle();
+                        if (satisEklendi) {
+                            bilgiMesaji("Satış başarıyla yapıldı.");
+                            lastikleriYukle();
+                        }
 
                     } catch (Exception e) {
-                        System.out.println("⚠️ Lütfen sayısal alanlara sadece sayı girin!");
+                        showWarning("Hatalı Giriş", "Lütfen sayısal alanlara geçerli değerler girin.");
                     }
                 } else {
                     showWarning("Müşteri Seçilmedi", "Lütfen bir müşteri seçin.");
@@ -375,6 +383,7 @@ public class LastiklerController {
             }
         });
     }
+
 
     // ======================================================
     //  İADE ET
